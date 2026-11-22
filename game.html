@@ -1,2215 +1,1164 @@
 
   <title>Flash Focus – Cotality Estimate Training Game</title>
-
-  <!-- Optional Real-time Libraries (Safely bypassed if blocked by firewall) -->
-  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js" onerror="console.warn('PeerJS CDN unreachable; using local multi-tab channel')"></script>
-  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js" onerror="console.warn('Confetti CDN unreachable')"></script>
+  
+  <!-- PeerJS for zero-backend WebRTC real-time multiplayer -->
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+  <!-- QRCode.js for automated dynamic QR code generation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <!-- Canvas Confetti for the Championship Celebration -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 
   <style>
     /* ==========================================================================
-       1. THEME & CORE STYLES (Corporate L&D Dark Navy & Cyan)
+       DESIGN & STYLING (Dark Navy, Cyan/Blue Accents, Gold Achievements)
        ========================================================================== */
     :root {
-      --bg-dark: #0a1128;
-      --bg-card: #1c2541;
-      --bg-card-alt: #24325a;
-      --accent-cyan: #00f0ff;
-      --accent-blue: #3a86ff;
-      --accent-gold: #ffbe0b;
-      --text-white: #ffffff;
-      --text-dim: #a0aec0;
-      --color-correct: #06d6a0;
-      --color-incorrect: #ef476f;
-      --border-radius: 14px;
-      --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --bg-primary: #070f1e;
+      --bg-secondary: #0c1c38;
+      --bg-card: #12284e;
+      --accent-cyan: #00e5ff;
+      --accent-blue: #0072ff;
+      --gold: #ffc107;
+      --gold-dark: #b28900;
+      --text-light: #ffffff;
+      --text-muted: #a4b8d5;
+      --correct: #00e676;
+      --incorrect: #ff1744;
+      --radius: 16px;
+      --shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font-family); -webkit-tap-highlight-color: transparent; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
 
     body {
-      background: radial-gradient(circle at 50% 20%, #15224d 0%, var(--bg-dark) 100%);
-      color: var(--text-white);
+      background: radial-gradient(circle at top, var(--bg-secondary), var(--bg-primary));
+      color: var(--text-light);
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       padding: 16px;
+      overflow-x: hidden;
     }
 
     .container {
       width: 100%;
-      max-width: 1050px;
+      max-width: 1024px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .card {
       background: var(--bg-card);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: var(--border-radius);
-      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
-      padding: 32px;
+      border: 1px solid rgba(0, 229, 255, 0.2);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 24px;
+      width: 100%;
+      text-align: center;
       position: relative;
     }
 
-    h1, h2, h3 { font-weight: 800; letter-spacing: -0.5px; }
-
-    .badge {
-      display: inline-block;
-      padding: 4px 12px;
-      border-radius: 20px;
-      font-size: 0.85rem;
-      font-weight: 700;
-      text-transform: uppercase;
+    h1, h2, h3 {
+      font-weight: 800;
+      letter-spacing: -0.5px;
     }
 
-    .badge-easy { background: rgba(6, 214, 160, 0.2); color: var(--color-correct); border: 1px solid var(--color-correct); }
-    .badge-moderate { background: rgba(255, 190, 11, 0.2); color: var(--accent-gold); border: 1px solid var(--accent-gold); }
-    .badge-challenging { background: rgba(239, 71, 111, 0.2); color: var(--color-incorrect); border: 1px solid var(--color-incorrect); }
+    .brand-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+      color: #070f1e;
+      font-weight: 900;
+      font-size: 0.85rem;
+      padding: 6px 14px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+    }
 
     .btn {
       background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
-      color: var(--bg-dark);
-      font-size: 1.05rem;
-      font-weight: 700;
+      color: #070f1e;
+      font-size: 1.1rem;
+      font-weight: 800;
+      padding: 14px 28px;
       border: none;
       border-radius: 12px;
-      padding: 12px 24px;
       cursor: pointer;
+      transition: transform 0.15s ease, filter 0.15s ease;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
-      transition: transform 0.15s ease, box-shadow 0.15s ease;
       text-decoration: none;
     }
 
-    .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0, 240, 255, 0.4); }
-    .btn:active { transform: translateY(0); }
-    .btn-secondary { background: var(--bg-card-alt); color: var(--text-white); border: 1px solid rgba(255, 255, 255, 0.2); }
-    .btn-gold { background: linear-gradient(135deg, #e5a100, var(--accent-gold)); color: #000; font-size: 1.15rem; padding: 14px 28px; }
-
-    .screen { display: none; }
-    .screen.active { display: block; }
-
-    .host-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      padding-bottom: 18px;
-      margin-bottom: 24px;
+    .btn:active {
+      transform: scale(0.98);
     }
 
+    .btn-gold {
+      background: linear-gradient(135deg, #ffd700, var(--gold));
+      color: #070f1e;
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.12);
+      color: var(--text-light);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    /* HOST LOBBY */
     .lobby-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 32px;
-      align-items: stretch;
-    }
-
-    .qr-card {
-      background: var(--bg-card-alt);
-      border-radius: var(--border-radius);
-      padding: 24px;
-      text-align: center;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      border: 2px dashed rgba(0, 240, 255, 0.4);
-    }
-
-    #qrcode {
-      background: white;
-      padding: 10px;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-width: 170px;
-      min-height: 170px;
-    }
-
-    #qrcode img {
-      width: 160px;
-      height: 160px;
-      display: block;
-      border-radius: 4px;
-    }
-
-    .room-code-tag {
-      font-size: 2.2rem;
-      font-weight: 900;
-      color: var(--accent-cyan);
-      letter-spacing: 4px;
-      background: var(--bg-dark);
-      padding: 6px 20px;
-      border-radius: 10px;
-      border: 1px solid rgba(0, 240, 255, 0.3);
-      display: inline-block;
-    }
-
-    .player-roster {
-      background: var(--bg-card-alt);
-      border-radius: var(--border-radius);
-      padding: 24px;
-      min-height: 290px;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .player-chips {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      max-height: 200px;
-      overflow-y: auto;
-      padding: 4px;
-      margin-top: 14px;
-    }
-
-    .player-chip {
-      background: var(--bg-dark);
-      border: 1px solid var(--accent-blue);
-      color: var(--text-white);
-      padding: 8px 16px;
-      border-radius: 20px;
-      font-weight: 600;
-    }
-
-    .timer-bar-container {
-      width: 100%;
-      height: 10px;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 6px;
-      overflow: hidden;
-      margin: 18px 0;
-    }
-
-    .timer-bar {
-      height: 100%;
-      width: 100%;
-      background: linear-gradient(90deg, var(--accent-cyan), var(--accent-gold));
-      transition: width 1s linear;
-    }
-
-    .question-title { font-size: 1.6rem; line-height: 1.35; margin-bottom: 24px; }
-
-    .answers-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-      margin-bottom: 24px;
-    }
-
-    .answer-card {
-      background: var(--bg-card-alt);
-      border: 2px solid rgba(255, 255, 255, 0.12);
-      border-radius: 12px;
-      padding: 20px;
-      font-size: 1.1rem;
-      font-weight: 600;
-      color: var(--text-white);
+      gap: 24px;
+      margin-top: 20px;
       text-align: left;
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
-
-    .answer-letter {
-      background: var(--bg-dark);
-      color: var(--accent-cyan);
-      width: 38px;
-      height: 38px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 8px;
-      font-weight: 800;
-      flex-shrink: 0;
-    }
-
-    .answer-card.correct {
-      background: rgba(6, 214, 160, 0.25) !important;
-      border-color: var(--color-correct) !important;
-      color: #e0fbf4 !important;
-    }
-
-    .answer-card.incorrect {
-      background: rgba(239, 71, 111, 0.2) !important;
-      border-color: var(--color-incorrect) !important;
-      opacity: 0.6;
-    }
-
-    .feedback-box {
-      background: var(--bg-dark);
-      border-left: 4px solid var(--accent-gold);
-      border-radius: 8px;
-      padding: 16px 20px;
-      margin-top: 18px;
-      display: none;
-    }
-
-    .leaderboard-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-    .leaderboard-table th { text-align: left; padding: 12px 16px; color: var(--text-dim); border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
-    .leaderboard-table td { padding: 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); font-size: 1.15rem; font-weight: 600; }
-    .rank-cell { width: 80px; font-weight: 800; }
-    .score-cell { text-align: right; color: var(--accent-gold); font-weight: 800; }
-
-    .podium-1 { background: rgba(255, 190, 11, 0.15); border-left: 4px solid var(--accent-gold); }
-    .podium-2 { background: rgba(160, 174, 192, 0.12); border-left: 4px solid #cbd5e0; }
-    .podium-3 { background: rgba(205, 127, 50, 0.12); border-left: 4px solid #cd7f32; }
-
-    .player-wrap { max-width: 480px; margin: 0 auto; }
-    .player-answers { display: flex; flex-direction: column; gap: 14px; }
-    .mobile-btn { padding: 20px; font-size: 1.15rem; border-radius: 14px; min-height: 72px; cursor: pointer; text-align: left; justify-content: flex-start; }
-
-    .role-bar { margin-bottom: 14px; font-size: 0.85rem; color: var(--text-dim); display: flex; justify-content: space-between; }
-    .role-bar a { color: var(--accent-cyan); text-decoration: underline; cursor: pointer; }
-
-    /* Points Result Banner on Mobile */
-    .result-badge {
-      font-size: 2.2rem;
-      font-weight: 900;
-      padding: 12px 24px;
-      border-radius: 16px;
-      display: inline-block;
-      margin: 12px 0;
-    }
-    .result-badge.correct {
-      background: rgba(6, 214, 160, 0.2);
-      color: var(--color-correct);
-      border: 2px solid var(--color-correct);
-    }
-    .result-badge.incorrect {
-      background: rgba(239, 71, 111, 0.2);
-      color: var(--color-incorrect);
-      border: 2px solid var(--color-incorrect);
     }
 
     @media (max-width: 768px) {
-      .container { padding: 18px; }
-      .lobby-grid { grid-template-columns: 1fr; }
-      .answers-grid { grid-template-columns: 1fr; }
-    }
-  </style>
-</head>
-<body>
-
-  <!-- ================= HOST INTERFACE ================= -->
-  <div id="host-view" class="container" style="display: none;">
-    <div class="role-bar">
-      <span>Facilitator Screen (Projector / Main Display)</span>
-      <span>
-        <a id="host-open-tester-btn" href="#" target="_blank" style="color: var(--accent-gold); font-weight: 700;">🎮 Open Player in New Tab</a>
-      </span>
-    </div>
-
-    <!-- HOST LOBBY -->
-    <div id="host-screen-lobby" class="screen active">
-      <div class="host-header">
-        <div>
-          <span class="badge badge-easy">Cotality Training Knowledge Check</span>
-          <h1 style="margin-top: 6px;">⚡ Flash Focus: Estimate Challenge</h1>
-        </div>
-        <button id="btn-start-game" class="btn btn-gold" onclick="hostStartGame()">Start Game 🚀</button>
-      </div>
-
-      <div class="lobby-grid">
-        <div class="qr-card">
-          <div style="font-size: 0.95rem; color: var(--text-dim); font-weight: 600;">Scan with phone camera to join:</div>
-          
-          <!-- Embedded Live QR Code -->
-          <div id="qrcode"></div>
-
-          <div>
-            <div style="font-size: 0.85rem; color: var(--text-dim);">ROOM CODE:</div>
-            <div id="host-room-code-display" class="room-code-tag">------</div>
-          </div>
-
-          <div style="font-size: 0.85rem; color: var(--text-dim); word-break: break-all; margin-top: 4px;">
-            <a id="host-join-url-link" href="#" target="_blank" style="color: var(--accent-cyan); text-decoration: underline; font-weight: 600;">Generating direct join URL...</a>
-          </div>
-
-          <button class="btn btn-secondary" style="padding: 6px 14px; font-size: 0.8rem;" onclick="copyJoinLink()">📋 Copy Direct Join Link</button>
-        </div>
-
-        <div class="player-roster">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <h3>Connected Players (<span id="host-player-count">0</span>)</h3>
-            <span class="badge badge-easy" id="host-net-status">Ready</span>
-          </div>
-          <div id="host-player-chips" class="player-chips">
-            <span id="host-roster-placeholder" style="color: var(--text-dim); font-size: 0.95rem;">Waiting for learners to scan or join...</span>
-          </div>
-          <div style="margin-top: auto; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; gap: 8px;">
-            <button class="btn btn-secondary" style="padding: 8px 14px; font-size: 0.85rem;" onclick="addSimulatedPlayer()">+ Add Test Player</button>
-            <a id="host-direct-join-btn" href="#" target="_blank" class="btn btn-secondary" style="padding: 8px 14px; font-size: 0.85rem; margin-left: auto;">Join as Player (New Tab) ↗</a>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- HOST QUESTION SCREEN -->
-    <div id="host-screen-question" class="screen">
-      <div class="host-header" style="padding-bottom: 12px; margin-bottom: 12px;">
-        <div style="display: flex; align-items: center; gap: 14px;">
-          <span id="host-q-badge" class="badge badge-moderate">Question 1/6</span>
-          <span id="host-difficulty-badge" class="badge badge-easy">Easy</span>
-        </div>
-        <div style="display: flex; align-items: center; gap: 18px;">
-          <div style="font-weight: 700;">Responses: <span id="host-answered-count" style="color: var(--accent-cyan);">0</span> / <span id="host-total-players-count">0</span></div>
-          <button id="btn-reveal-answer" class="btn btn-secondary" style="padding: 8px 18px; font-size: 0.95rem;" onclick="hostRevealAnswer()">Reveal Answer</button>
-        </div>
-      </div>
-
-      <div class="timer-bar-container">
-        <div id="host-timer-bar" class="timer-bar"></div>
-      </div>
-
-      <div style="display: flex; justify-content: space-between; align-items: baseline;">
-        <h2 id="host-question-text" class="question-title">Question prompt goes here...</h2>
-        <div id="host-timer-text" style="font-size: 2.2rem; font-weight: 900; color: var(--accent-cyan); margin-left: 20px;">20</div>
-      </div>
-
-      <div id="host-answers-container" class="answers-grid"></div>
-
-      <div id="host-feedback-box" class="feedback-box">
-        <div style="font-weight: 800; color: var(--accent-gold); margin-bottom: 4px;">💡 Explanation:</div>
-        <div id="host-explanation-text" style="line-height: 1.4; color: #f0f4f8;"></div>
-        <div id="host-source-text" style="font-size: 0.85rem; color: var(--text-dim); margin-top: 8px;"></div>
-      </div>
-
-      <div id="host-question-controls" style="margin-top: 24px; display: none; justify-content: flex-end;">
-        <button class="btn" onclick="hostNextQuestion()">View Leaderboard 📊</button>
-      </div>
-    </div>
-
-    <!-- HOST INTERMEDIATE LEADERBOARD -->
-    <div id="host-screen-leaderboard" class="screen">
-      <div class="host-header">
-        <h2>📊 Current Leaderboard</h2>
-        <button class="btn btn-gold" onclick="hostResumeNextQuestion()">Next Question ➡️</button>
-      </div>
-      <table class="leaderboard-table">
-        <thead><tr><th class="rank-cell">Rank</th><th>Learner</th><th class="score-cell">Points</th></tr></thead>
-        <tbody id="host-leaderboard-body"></tbody>
-      </table>
-    </div>
-
-    <!-- HOST FINAL LEADERBOARD -->
-    <div id="host-screen-final" class="screen" style="text-align: center;">
-      <span class="badge badge-moderate" style="font-size: 1.1rem; padding: 8px 24px; margin-bottom: 12px;">🏆 Challenge Complete!</span>
-      <h1 style="font-size: 2.6rem; color: var(--accent-gold); margin-bottom: 8px;">FINAL LEADERBOARD</h1>
-      <p style="color: var(--text-dim); font-size: 1.2rem; margin-bottom: 24px;">Congratulations to today's Training Challenge Champion!</p>
-
-      <div style="background: rgba(255, 190, 11, 0.1); border: 2px solid var(--accent-gold); border-radius: var(--border-radius); padding: 24px; max-width: 600px; margin: 0 auto 32px auto;">
-        <div style="font-size: 1.2rem; color: var(--text-dim);">🥇 Champion:</div>
-        <div id="champion-name" style="font-size: 2.4rem; font-weight: 900; color: #fff;">--</div>
-        <div id="champion-score" style="font-size: 1.4rem; color: var(--accent-gold); font-weight: 800; margin-top: 6px;">0 pts</div>
-      </div>
-
-      <table class="leaderboard-table" style="max-width: 750px; margin: 0 auto 32px auto;">
-        <thead><tr><th class="rank-cell">Rank</th><th>Learner</th><th class="score-cell">Final Score</th></tr></thead>
-        <tbody id="host-final-leaderboard-body"></tbody>
-      </table>
-
-      <div style="display: flex; justify-content: center; gap: 16px;">
-        <button class="btn btn-secondary" onclick="hostResetGame()">Play Again</button>
-        <button class="btn" onclick="location.reload()">Return to Lobby</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ================= PLAYER INTERFACE ================= -->
-  <div id="player-view" class="container player-wrap" style="display: none;">
-    <div class="role-bar">
-      <span>Learner Mobile Interface</span>
-      <span id="player-room-indicator" style="color: var(--accent-cyan); font-weight: 700;">Room: --</span>
-    </div>
-
-    <!-- PLAYER JOIN SCREEN -->
-    <div id="player-screen-join" class="screen active">
-      <div style="text-align: center; margin-bottom: 24px;">
-        <span class="badge badge-easy">Flash Focus</span>
-        <h2 style="margin-top: 8px;">Join Training Game</h2>
-      </div>
-
-      <div style="display: flex; flex-direction: column; gap: 16px;">
-        <div>
-          <label style="display: block; font-size: 0.9rem; margin-bottom: 6px; color: var(--text-dim);">Room Code</label>
-          <input id="player-input-room" type="text" placeholder="e.g. FLASH1" maxlength="6" style="width: 100%; padding: 14px; background: var(--bg-dark); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; color: #fff; font-size: 1.2rem; font-weight: 700; text-transform: uppercase; text-align: center;">
-        </div>
-
-        <div>
-          <label style="display: block; font-size: 0.9rem; margin-bottom: 6px; color: var(--text-dim);">Your Name or Nickname</label>
-          <input id="player-input-name" type="text" placeholder="e.g. Alex M." maxlength="20" style="width: 100%; padding: 14px; background: var(--bg-dark); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; color: #fff; font-size: 1.1rem; font-weight: 600;">
-        </div>
-
-        <div id="player-join-error" style="color: var(--color-incorrect); font-size: 0.9rem; display: none;"></div>
-        <button class="btn mobile-btn" onclick="playerJoinGame()">Join Game 🚀</button>
-      </div>
-    </div>
-
-    <!-- PLAYER WAITING LOBBY -->
-    <div id="player-screen-waiting" class="screen" style="text-align: center; padding: 40px 0;">
-      <div style="font-size: 3.5rem; margin-bottom: 12px;">🎯</div>
-      <h2>You're In, <span id="player-display-name" style="color: var(--accent-cyan);">Learner</span>!</h2>
-      <p style="color: var(--text-dim); margin: 12px 0 24px 0;">Watch the facilitator screen for the countdown.</p>
-      <div class="badge badge-moderate">Waiting for Host to start...</div>
-    </div>
-
-    <!-- PLAYER QUESTION SCREEN -->
-    <div id="player-screen-question" class="screen">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-        <span id="player-q-number" class="badge badge-easy">Q1</span>
-        <div style="font-weight: 700; color: var(--accent-gold);">Score: <span id="player-current-score">0</span></div>
-      </div>
-
-      <div class="timer-bar-container"><div id="player-timer-bar" class="timer-bar"></div></div>
-      <h3 id="player-q-text" style="font-size: 1.2rem; margin-bottom: 20px;">Question goes here...</h3>
-      <div id="player-answers-box" class="player-answers"></div>
-
-      <div id="player-lock-notice" style="display: none; text-align: center; padding: 30px; background: var(--bg-card-alt); border-radius: var(--border-radius);">
-        <div style="font-size: 2.2rem; margin-bottom: 6px;">🔒</div>
-        <h3>Answer Locked!</h3>
-        <p style="color: var(--text-dim); margin-top: 4px;">Watch the facilitator screen for the explanation and points.</p>
-      </div>
-    </div>
-
-    <!-- PLAYER ROUND RESULT & POINTS BREAKDOWN SCREEN -->
-    <div id="player-screen-result" class="screen" style="text-align: center; padding: 24px 10px;">
-      <div id="player-result-icon" style="font-size: 3.5rem; margin-bottom: 6px;">✓</div>
-      <h2 id="player-result-heading">Correct!</h2>
-
-      <div id="player-earned-badge" class="result-badge correct">+1,350 pts</div>
-
-      <div id="player-breakdown-text" style="color: var(--text-dim); font-size: 1rem; margin-bottom: 16px;">
-        1,000 Base Points + 350 Speed Bonus
-      </div>
-
-      <div style="background: var(--bg-card-alt); border-radius: 12px; padding: 16px; margin: 16px auto; max-width: 320px; border: 1px solid rgba(255,255,255,0.1);">
-        <div style="font-size: 0.9rem; color: var(--text-dim);">Total Score:</div>
-        <div id="player-total-score-display" style="font-size: 1.8rem; font-weight: 900; color: var(--accent-gold);">0 pts</div>
-      </div>
-
-      <p style="color: var(--text-dim); margin-top: 8px;">Watch the facilitator screen for standings!</p>
-    </div>
-  </div>
-
-  <!-- ================= JAVASCRIPT LOGIC ================= -->
-  <script>
-    /* ==========================================================================
-       QUESTION BANK
-       ========================================================================== */
-    const QUESTIONS = [
-      {
-        question: "When working in Cotality Estimate, when will your estimate work become visible within Claims Workspace?",
-        choices: [
-          "Automatically in real time as you edit line items",
-          "When you upload your claim file",
-          "Only after the claim status is marked as 'Approved'",
-          "Whenever you toggle between 2-D and 3-D diagram modes"
-        ],
-        correctAnswer: 1,
-        explanation: "All work completed in Estimate becomes visible within Claims Workspace once you upload your claim file.",
-        difficulty: "Easy",
-        points: 1000,
-        seconds: 15,
-        source: "Module 1: Claims Workspace vs. Estimate"
-      },
-      {
-        question: "What is the primary difference between Segment Mode and Build Out Mode when diagramming interior rooms?",
-        choices: [
-          "Segment Mode modifies the shape of a room; Build Out Mode builds a new room from an adjacent wall.",
-          "Segment Mode adds doors and windows; Build Out Mode adds blocks and stairs.",
-          "Segment Mode creates 3-D roof shapes; Build Out Mode creates 2-D exterior elevations.",
-          "Segment Mode calculates room volume; Build Out Mode rotates rooms to face North."
-        ],
-        correctAnswer: 0,
-        explanation: "Segment Mode is used to modify room shapes, while Build Out Mode builds new rooms directly from an adjacent wall.",
-        difficulty: "Easy",
-        points: 1000,
-        seconds: 15,
-        source: "Module 4: Section 4.4 - Segment & Build Out Mode"
-      },
-      {
-        question: "When diagramming a core roof shape, what is the recommended order (PER) for adjusting dimensions?",
-        choices: [
-          "Perimeter, Elevation, Rafter Length",
-          "Pitch, Eave Length, Rafter Length",
-          "Plan Area, Exterior Wall, Ridge Height",
-          "Pitch, Elevation, Ridge Length"
-        ],
-        correctAnswer: 1,
-        explanation: "The recommended sequence for dimension adjustments in roofing is PER: 1. Pitch, 2. Eave Length, 3. Rafter Length.",
-        difficulty: "Moderate",
-        points: 1000,
-        seconds: 20,
-        source: "Module 6: Section 6.3 - Roofing Dimensions (PER)"
-      },
-      {
-        question: "An estimator needs to apply roofing line items to an entire roofplan rather than a single slope. What is the recommended method?",
-        choices: [
-          "Drop the items onto the open canvas rather than directly on the roof",
-          "Double-click the ridge line in the Wall Editor",
-          "Select all dormers and link them as subrooms of the main structure",
-          "Drag and drop the Roofplan directly into the Claims Workspace chat window"
-        ],
-        correctAnswer: 0,
-        explanation: "Dropping items onto the open canvas applies them across the entire roofplan, whereas dropping directly on a slope applies only to that slope.",
-        difficulty: "Moderate",
-        points: 1000,
-        seconds: 20,
-        source: "Module 6: Section 6.6 - Estimating on Roofs"
-      },
-      {
-        question: "How do Roof Shape Properties differ from Roofplan Properties in Cotality Estimate?",
-        choices: [
-          "Roof Shape Properties apply to a selected roof shape; Roofplan Properties apply to the entire roofplan and any shapes added to it.",
-          "Roof Shape Properties set sales tax rates; Roofplan Properties set material pricelists.",
-          "Roof Shape Properties define 3-D AutoCreate rules; Roofplan Properties define interior ceiling textures.",
-          "Roof Shape Properties are locked to vendor estimates; Roofplan Properties can only be viewed in Offline Mode."
-        ],
-        correctAnswer: 0,
-        explanation: "Roof Shape Properties apply strictly to a selected shape, whereas Roofplan Properties apply globally across the full roofplan.",
-        difficulty: "Moderate",
-        points: 1000,
-        seconds: 20,
-        source: "Module 6: Section 6.5 - Roof Shape vs. Roofplan Properties"
-      },
-      {
-        question: "When reviewing vendor estimates for a claim, what requirement must be met before an estimate from a vendor will appear on the Claim Totals Page?",
-        choices: [
-          "The vendor estimate must be in an 'Approved' status.",
-          "The vendor estimate must be marked as a 'Temporary Claim.'",
-          "The estimate must contain an Age/Life depreciation of at least 12 years.",
-          "The estimate must be generated using AutoCreate from a 3-D Exterior Plan."
-        ],
-        correctAnswer: 0,
-        explanation: "Estimates from external vendors must be in an Approved status before becoming calculated on the Claims Totals Page.",
-        difficulty: "Challenging",
-        points: 1000,
-        seconds: 30,
-        source: "Module 10: Section 10.3 - Claim Totals Page"
-      }
-    ];
-
-    /* ==========================================================================
-       STATE & COMMUNICATION ENGINE
-       ========================================================================== */
-    const APP_PREFIX = "FLASHFOCUS_";
-    let isHostMode = false;
-    let roomCode = "";
-    let localBroadcast = null;
-    let peer = null;
-
-    // Host State
-    let connectedPlayers = new Map();
-    let currentQuestionIndex = 0;
-    let questionTimer = null;
-    let secondsLeft = 0;
-    let questionStartTime = 0;
-    let hostResponsesReceived = 0;
-
-    // Player State
-    let playerClient = {
-      peerId: null,
-      name: "",
-      score: 0,
-      conn: null,
-      hasAnswered: false,
-      selectedChoice: null,
-      answerTimeSec: 0,
-      questionStartTime: 0
-    };
-
-    /* ==========================================================================
-       STARTUP ROUTING
-       ========================================================================== */
-    window.addEventListener("DOMContentLoaded", () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const urlRoom = urlParams.get("room");
-      const modeParam = urlParams.get("mode");
-
-      if (modeParam === "player" || (urlRoom && modeParam !== "host")) {
-        // Run as Player
-        isHostMode = false;
-        document.getElementById("host-view").style.display = "none";
-        document.getElementById("player-view").style.display = "block";
-        if (urlRoom) {
-          document.getElementById("player-input-room").value = urlRoom.toUpperCase();
-          document.getElementById("player-room-indicator").innerText = "Room: " + urlRoom.toUpperCase();
-        }
-      } else {
-        // Run as Facilitator Host
-        isHostMode = true;
-        document.getElementById("player-view").style.display = "none";
-        document.getElementById("host-view").style.display = "block";
-        initHost();
-      }
-    });
-
-    /* ==========================================================================
-       FACILITATOR HOST LOGIC
-       ========================================================================== */
-    function initHost() {
-      roomCode = "FLASH" + Math.floor(10 + Math.random() * 90);
-      document.getElementById("host-room-code-display").innerText = roomCode;
-
-      const currentUrlNoParams = window.location.href.split("?")[0];
-      const playerJoinUrl = `${currentUrlNoParams}?mode=player&room=${roomCode}`;
-
-      const linkElem = document.getElementById("host-join-url-link");
-      linkElem.innerText = playerJoinUrl;
-      linkElem.href = playerJoinUrl;
-
-      document.getElementById("host-open-tester-btn").href = playerJoinUrl;
-      document.getElementById("host-direct-join-btn").href = playerJoinUrl;
-
-      renderQR(playerJoinUrl, document.getElementById("qrcode"));
-
-      try {
-        if (typeof BroadcastChannel !== "undefined") {
-          localBroadcast = new BroadcastChannel(APP_PREFIX + roomCode);
-          localBroadcast.onmessage = (e) => handleHostIncoming(e.data);
-        }
-      } catch (err) {}
-
-      try {
-        if (typeof Peer !== "undefined") {
-          peer = new Peer(APP_PREFIX + roomCode, { debug: 0 });
-          peer.on("connection", (conn) => {
-            conn.on("data", (data) => handleHostIncoming(data, conn));
-          });
-          peer.on("open", () => {
-            document.getElementById("host-net-status").innerText = "Cloud Online";
-          });
-          peer.on("error", () => {
-            document.getElementById("host-net-status").innerText = "Local Mode";
-          });
-        }
-      } catch (err) {}
-    }
-
-    function renderQR(text, container) {
-      if (!container) return;
-      container.innerHTML = "";
-      const img = document.createElement("img");
-      img.src = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&margin=2&data=${encodeURIComponent(text)}`;
-      img.alt = "Scan to Join";
-      img.onerror = () => {
-        container.innerHTML = `<div style="color:#0a1128; font-weight:700; font-size:0.85rem; padding:10px;">Open link below</div>`;
-      };
-      container.appendChild(img);
-    }
-
-    function copyJoinLink() {
-      const url = document.getElementById("host-join-url-link").href;
-      if (navigator.clipboard) {
-        navigator.clipboard.writeText(url).then(() => alert("Direct join link copied to clipboard!"));
-      } else {
-        prompt("Copy this direct join URL:", url);
+      .lobby-grid {
+        grid-template-columns: 1fr;
       }
     }
 
-    function handleHostIncoming(data, conn = null) {
-      if (!data || !data.type) return;
-
-      if (data.type === "PLAYER_JOIN") {
-        connectedPlayers.set(data.playerId, {
-          id: data.playerId,
-          name: data.name,
-          score: 0,
-          correctCount: 0,
-          totalTime: 0,
-          conn: conn
-        });
-        updateRoster();
-
-        const ack = { type: "JOIN_CONFIRMED", name: data.name, room: roomCode };
-        if (conn && conn.open) conn.send(ack);
-        if (localBroadcast) localBroadcast.postMessage({ target: data.playerId, ...ack });
-      }
-
-      if (data.type === "SUBMIT_ANSWER") {
-        const p = connectedPlayers.get(data.playerId);
-        if (p) {
-          hostResponsesReceived++;
-          document.getElementById("host-answered-count").innerText = hostResponsesReceived;
-
-          const q = QUESTIONS[currentQuestionIndex];
-          const isCorrect = (data.choiceIndex === q.correctAnswer);
-          const timeTaken = Math.max(0.1, (Date.now() - questionStartTime) / 1000);
-
-          if (isCorrect) {
-            p.correctCount++;
-            const speedBonus = Math.round(Math.max(0, (1 - (timeTaken / q.seconds))) * 500);
-            p.score += (q.points + speedBonus);
-            p.totalTime += timeTaken;
-          }
-
-          if (hostResponsesReceived >= connectedPlayers.size && connectedPlayers.size > 0) {
-            clearInterval(questionTimer);
-            hostRevealAnswer();
-          }
-        }
-      }
-    }
-
-    function updateRoster() {
-      const count = connectedPlayers.size;
-      document.getElementById("host-player-count").innerText = count;
-      document.getElementById("host-total-players-count").innerText = count;
-
-      const placeholder = document.getElementById("host-roster-placeholder");
-      if (placeholder) placeholder.style.display = (count > 0) ? "none" : "block";
-
-      const chipsBox = document.getElementById("host-player-chips");
-      chipsBox.innerHTML = "";
-      connectedPlayers.forEach(p => {
-        const chip = document.createElement("div");
-        chip.className = "player-chip";
-        chip.innerText = `👤 ${p.name}`;
-        chipsBox.appendChild(chip);
-      });
-    }
-
-    function addSimulatedPlayer() {
-      const names = ["Jordan P.", "Sam T.", "Morgan R.", "Casey K."];
-      const name = names[connectedPlayers.size % names.length];
-      const id = "SIM_" + Math.random().toString(36).substring(2, 6);
-      connectedPlayers.set(id, { id: id, name: name, score: 0, correctCount: 0, totalTime: 0 });
-      updateRoster();
-    }
-
-    function hostStartGame() {
-      currentQuestionIndex = 0;
-      loadHostQuestion(0);
-    }
-
-    function loadHostQuestion(idx) {
-      const q = QUESTIONS[idx];
-      hostResponsesReceived = 0;
-
-      showHostScreen("host-screen-question");
-
-      document.getElementById("host-answered-count").innerText = "0";
-      document.getElementById("host-q-badge").innerText = `Question ${idx + 1}/${QUESTIONS.length}`;
-      document.getElementById("host-difficulty-badge").innerText = q.difficulty;
-      document.getElementById("host-difficulty-badge").className = `badge badge-${q.difficulty.toLowerCase()}`;
-      document.getElementById("host-question-text").innerText = q.question;
-      document.getElementById("host-feedback-box").style.display = "none";
-      document.getElementById("host-question-controls").style.display = "none";
-      document.getElementById("btn-reveal-answer").style.display = "inline-flex";
-
-      const box = document.getElementById("host-answers-container");
-      box.innerHTML = "";
-      const letters = ["A", "B", "C", "D"];
-      q.choices.forEach((choice, i) => {
-        const card = document.createElement("div");
-        card.className = "answer-card";
-        card.id = `host-ans-${i}`;
-        card.innerHTML = `<span class="answer-letter">${letters[i]}</span><span>${choice}</span>`;
-        box.appendChild(card);
-      });
-
-      hostBroadcast({
-        type: "NEW_QUESTION",
-        questionIndex: idx,
-        question: q.question,
-        choices: q.choices,
-        seconds: q.seconds,
-        points: q.points,
-        total: QUESTIONS.length
-      });
-
-      startHostTimer(q.seconds);
-    }
-
-    function startHostTimer(duration) {
-      clearInterval(questionTimer);
-      secondsLeft = duration;
-      questionStartTime = Date.now();
-
-      const text = document.getElementById("host-timer-text");
-      const bar = document.getElementById("host-timer-bar");
-      text.innerText = secondsLeft;
-      bar.style.width = "100%";
-
-      questionTimer = setInterval(() => {
-        secondsLeft--;
-        text.innerText = secondsLeft;
-        bar.style.width = `${Math.max(0, (secondsLeft / duration) * 100)}%`;
-
-        if (secondsLeft <= 0) {
-          clearInterval(questionTimer);
-          hostRevealAnswer();
-        }
-      }, 1000);
-    }
-
-    function hostRevealAnswer() {
-      clearInterval(questionTimer);
-      const q = QUESTIONS[currentQuestionIndex];
-
-      q.choices.forEach((_, i) => {
-        const card = document.getElementById(`host-ans-${i}`);
-        if (card) {
-          if (i === q.correctAnswer) {
-            card.classList.add("correct");
-            card.innerHTML += ` <span style="margin-left:auto; font-size:1.2rem;">✓ Correct</span>`;
-          } else {
-            card.classList.add("incorrect");
-          }
-        }
-      });
-
-      document.getElementById("host-explanation-text").innerText = q.explanation;
-      document.getElementById("host-source-text").innerText = `Reference: ${q.source}`;
-      document.getElementById("host-feedback-box").style.display = "block";
-      document.getElementById("btn-reveal-answer").style.display = "none";
-      document.getElementById("host-question-controls").style.display = "flex";
-
-      // Send answer, base points, and allotted seconds so players see exact scores
-      hostBroadcast({
-        type: "REVEAL_ANSWER",
-        correctAnswer: q.correctAnswer,
-        points: q.points,
-        seconds: q.seconds,
-        explanation: q.explanation
-      });
-
-      if (currentQuestionIndex === QUESTIONS.length - 1) {
-        setTimeout(hostDisplayFinal, 3200);
-      }
-    }
-
-    function hostNextQuestion() {
-      showHostScreen("host-screen-leaderboard");
-      renderLeaderboard("host-leaderboard-body");
-    }
-
-    function hostResumeNextQuestion() {
-      currentQuestionIndex++;
-      if (currentQuestionIndex < QUESTIONS.length) {
-        loadHostQuestion(currentQuestionIndex);
-      } else {
-        hostDisplayFinal();
-      }
-    }
-
-    function renderLeaderboard(tbodyId) {
-      const tbody = document.getElementById(tbodyId);
-      tbody.innerHTML = "";
-      const sorted = Array.from(connectedPlayers.values()).sort((a,b) => b.score - a.score);
-      if (sorted.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:var(--text-dim);">No players scored yet.</td></tr>`;
-        return;
-      }
-      sorted.forEach((p, i) => {
-        const row = document.createElement("tr");
-        if (i === 0) row.className = "podium-1";
-        else if (i === 1) row.className = "podium-2";
-        else if (i === 2) row.className = "podium-3";
-        const medals = ["🥇", "🥈", "🥉"];
-        row.innerHTML = `<td class="rank-cell">${i < 3 ? medals[i] : i + 1}</td><td>${p.name}</td><td class="score-cell">${p.score.toLocaleString()} pts</td>`;
-        tbody.appendChild(row);
-      });
-    }
-
-    function hostDisplayFinal() {
-      showHostScreen("host-screen-final");
-      renderLeaderboard("host-final-leaderboard-body");
-      const sorted = Array.from(connectedPlayers.values()).sort((a,b) => b.score - a.score);
-      if (sorted.length > 0) {
-        document.getElementById("champion-name").innerText = sorted[0].name;
-        document.getElementById("champion-score").innerText = `${sorted[0].score.toLocaleString()} points`;
-      }
-      if (typeof confetti !== "undefined") {
-        try { confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } }); } catch(e) {}
-      }
-      hostBroadcast({ type: "GAME_OVER" });
-    }
-
-    function hostResetGame() {
-      connectedPlayers.forEach(p => p.score = 0);
-      currentQuestionIndex = 0;
-      loadHostQuestion(0);
-    }
-
-    function showHostScreen(id) {
-      document.querySelectorAll("#host-view .screen").forEach(s => s.classList.remove("active"));
-      const target = document.getElementById(id);
-      if (target) target.classList.add("active");
-    }
-
-    function hostBroadcast(msg) {
-      if (localBroadcast) {
-        try { localBroadcast.postMessage(msg); } catch(e) {}
-      }
-      connectedPlayers.forEach(p => {
-        if (p.conn && p.conn.open) {
-          try { p.conn.send(msg); } catch(e) {}
-        }
-      });
-    }
-
-    /* ==========================================================================
-       LEARNER / PLAYER LOGIC & POINT FEEDBACK
-       ========================================================================== */
-    function playerJoinGame() {
-      const r = document.getElementById("player-input-room").value.trim().toUpperCase();
-      const n = document.getElementById("player-input-name").value.trim();
-      const errBox = document.getElementById("player-join-error");
-
-      if (!r || r.length < 4) {
-        errBox.innerText = "Please enter a valid Room Code.";
-        errBox.style.display = "block";
-        return;
-      }
-      if (!n) {
-        errBox.innerText = "Please enter your name or nickname.";
-        errBox.style.display = "block";
-        return;
-      }
-
-      errBox.style.display = "none";
-      playerClient.name = n;
-      playerClient.score = 0;
-      playerClient.peerId = "PL_" + Math.random().toString(36).substring(2, 8);
-      document.getElementById("player-display-name").innerText = n;
-
-      try {
-        if (typeof BroadcastChannel !== "undefined") {
-          localBroadcast = new BroadcastChannel(APP_PREFIX + r);
-          localBroadcast.onmessage = (e) => handlePlayerIncoming(e.data);
-          localBroadcast.postMessage({ type: "PLAYER_JOIN", playerId: playerClient.peerId, name: n });
-        }
-      } catch (e) {}
-
-      try {
-        if (typeof Peer !== "undefined") {
-          peer = new Peer({ debug: 0 });
-          peer.on("open", () => {
-            const conn = peer.connect(APP_PREFIX + r);
-            playerClient.conn = conn;
-            conn.on("open", () => {
-              conn.send({ type: "PLAYER_JOIN", playerId: playerClient.peerId, name: n });
-            });
-            conn.on("data", (d) => handlePlayerIncoming(d));
-          });
-        }
-      } catch (e) {}
-
-      showPlayerScreen("player-screen-waiting");
-    }
-
-    function handlePlayerIncoming(data) {
-      if (!data || !data.type) return;
-
-      if (data.type === "NEW_QUESTION") {
-        playerClient.hasAnswered = false;
-        playerClient.selectedChoice = null;
-        playerClient.questionStartTime = Date.now();
-        playerClient.answerTimeSec = 0;
-
-        showPlayerScreen("player-screen-question");
-        document.getElementById("player-q-number").innerText = `Q${data.questionIndex + 1} of ${data.total}`;
-        document.getElementById("player-q-text").innerText = data.question;
-        document.getElementById("player-answers-box").style.display = "flex";
-        document.getElementById("player-lock-notice").style.display = "none";
-        document.getElementById("player-current-score").innerText = playerClient.score.toLocaleString();
-
-        const box = document.getElementById("player-answers-box");
-        box.innerHTML = "";
-        data.choices.forEach((c, i) => {
-          const btn = document.createElement("button");
-          btn.className = "btn btn-secondary mobile-btn";
-          btn.innerText = c;
-          btn.onclick = () => {
-            if (playerClient.hasAnswered) return;
-            playerClient.hasAnswered = true;
-            playerClient.selectedChoice = i;
-            playerClient.answerTimeSec = Math.max(0.1, (Date.now() - playerClient.questionStartTime) / 1000);
-
-            document.getElementById("player-answers-box").style.display = "none";
-            document.getElementById("player-lock-notice").style.display = "block";
-
-            const payload = { type: "SUBMIT_ANSWER", playerId: playerClient.peerId, choiceIndex: i };
-            if (localBroadcast) localBroadcast.postMessage(payload);
-            if (playerClient.conn && playerClient.conn.open) playerClient.conn.send(payload);
-          };
-          box.appendChild(btn);
-        });
-
-        // Start countdown animation on mobile bar
-        const bar = document.getElementById("player-timer-bar");
-        bar.style.transition = "none";
-        bar.style.width = "100%";
-        setTimeout(() => {
-          bar.style.transition = `width ${data.seconds}s linear`;
-          bar.style.width = "0%";
-        }, 50);
-      }
-
-      if (data.type === "REVEAL_ANSWER") {
-        showPlayerScreen("player-screen-result");
-
-        const isCorrect = (playerClient.selectedChoice === data.correctAnswer);
-        let earned = 0;
-        let basePts = data.points || 1000;
-        let speedBonus = 0;
-
-        const iconElem = document.getElementById("player-result-icon");
-        const headingElem = document.getElementById("player-result-heading");
-        const badgeElem = document.getElementById("player-earned-badge");
-        const breakdownElem = document.getElementById("player-breakdown-text");
-
-        if (isCorrect) {
-          // Calculate speed bonus: up to 500 points for responding quickly
-          const duration = data.seconds || 20;
-          const ratio = Math.max(0, 1 - (playerClient.answerTimeSec / duration));
-          speedBonus = Math.round(ratio * 500);
-          earned = basePts + speedBonus;
-          playerClient.score += earned;
-
-          iconElem.innerText = "✓";
-          iconElem.style.color = "var(--color-correct)";
-          headingElem.innerText = "Correct!";
-          badgeElem.className = "result-badge correct";
-          badgeElem.innerText = `+${earned.toLocaleString()} pts`;
-          breakdownElem.innerText = `${basePts.toLocaleString()} Base Points + ${speedBonus} Speed Bonus`;
-        } else {
-          iconElem.innerText = "✕";
-          iconElem.style.color = "var(--color-incorrect)";
-          headingElem.innerText = playerClient.hasAnswered ? "Incorrect" : "Time's Up!";
-          badgeElem.className = "result-badge incorrect";
-          badgeElem.innerText = "+0 pts";
-          breakdownElem.innerText = playerClient.hasAnswered ? "Better luck on the next question!" : "No answer was recorded.";
-        }
-
-        document.getElementById("player-total-score-display").innerText = `${playerClient.score.toLocaleString()} pts`;
-        document.getElementById("player-current-score").innerText = playerClient.score.toLocaleString();
-      }
-
-      if (data.type === "GAME_OVER") {
-        showPlayerScreen("player-screen-result");
-      }
-    }
-
-    function showPlayerScreen(id) {
-      document.querySelectorAll("#player-view .screen").forEach(s => s.classList.remove("active"));
-      const target = document.getElementById(id);
-      if (target) target.classList.add("active");
-    }
-  </script>
-</body>
-</html>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Flash Focus – Cotality Estimate Training Game</title>
-
-  <!-- Optional Real-time Libraries (Safely bypassed if blocked by firewall) -->
-  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js" onerror="console.warn('PeerJS CDN unreachable; using local multi-tab channel')"></script>
-  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js" onerror="console.warn('Confetti CDN unreachable')"></script>
-
-  <style>
-    /* ==========================================================================
-       1. THEME & CORE STYLES (Corporate L&D Dark Navy & Cyan)
-       ========================================================================== */
-    :root {
-      --bg-dark: #0a1128;
-      --bg-card: #1c2541;
-      --bg-card-alt: #24325a;
-      --accent-cyan: #00f0ff;
-      --accent-blue: #3a86ff;
-      --accent-gold: #ffbe0b;
-      --text-white: #ffffff;
-      --text-dim: #a0aec0;
-      --color-correct: #06d6a0;
-      --color-incorrect: #ef476f;
-      --border-radius: 14px;
-      --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font-family); -webkit-tap-highlight-color: transparent; }
-
-    body {
-      background: radial-gradient(circle at 50% 20%, #15224d 0%, var(--bg-dark) 100%);
-      color: var(--text-white);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
+    .qr-container {
+      background: white;
       padding: 16px;
-    }
-
-    .container {
-      width: 100%;
-      max-width: 1050px;
-      background: var(--bg-card);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: var(--border-radius);
-      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
-      padding: 32px;
-      position: relative;
-    }
-
-    h1, h2, h3 { font-weight: 800; letter-spacing: -0.5px; }
-
-    .badge {
+      border-radius: 14px;
       display: inline-block;
-      padding: 4px 12px;
-      border-radius: 20px;
-      font-size: 0.85rem;
-      font-weight: 700;
-      text-transform: uppercase;
+      box-shadow: var(--shadow);
     }
 
-    .badge-easy { background: rgba(6, 214, 160, 0.2); color: var(--color-correct); border: 1px solid var(--color-correct); }
-    .badge-moderate { background: rgba(255, 190, 11, 0.2); color: var(--accent-gold); border: 1px solid var(--accent-gold); }
-    .badge-challenging { background: rgba(239, 71, 111, 0.2); color: var(--color-incorrect); border: 1px solid var(--color-incorrect); }
-
-    .btn {
-      background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
-      color: var(--bg-dark);
-      font-size: 1.05rem;
-      font-weight: 700;
-      border: none;
-      border-radius: 12px;
-      padding: 12px 24px;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      transition: transform 0.15s ease, box-shadow 0.15s ease;
-      text-decoration: none;
-    }
-
-    .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0, 240, 255, 0.4); }
-    .btn:active { transform: translateY(0); }
-    .btn-secondary { background: var(--bg-card-alt); color: var(--text-white); border: 1px solid rgba(255, 255, 255, 0.2); }
-    .btn-gold { background: linear-gradient(135deg, #e5a100, var(--accent-gold)); color: #000; font-size: 1.15rem; padding: 14px 28px; }
-
-    .screen { display: none; }
-    .screen.active { display: block; }
-
-    .host-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      padding-bottom: 18px;
-      margin-bottom: 24px;
-    }
-
-    .lobby-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 32px;
-      align-items: stretch;
-    }
-
-    .qr-card {
-      background: var(--bg-card-alt);
-      border-radius: var(--border-radius);
-      padding: 24px;
-      text-align: center;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      border: 2px dashed rgba(0, 240, 255, 0.4);
-    }
-
-    #qrcode {
-      background: white;
-      padding: 10px;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-width: 170px;
-      min-height: 170px;
-    }
-
-    #qrcode img {
-      width: 160px;
-      height: 160px;
-      display: block;
-      border-radius: 4px;
-    }
-
-    .room-code-tag {
-      font-size: 2.2rem;
+    .code-display {
+      font-size: 3rem;
       font-weight: 900;
       color: var(--accent-cyan);
       letter-spacing: 4px;
-      background: var(--bg-dark);
-      padding: 6px 20px;
-      border-radius: 10px;
-      border: 1px solid rgba(0, 240, 255, 0.3);
-      display: inline-block;
+      margin: 8px 0;
     }
 
-    .player-roster {
-      background: var(--bg-card-alt);
-      border-radius: var(--border-radius);
-      padding: 24px;
-      min-height: 290px;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .player-chips {
+    .player-pill-grid {
       display: flex;
       flex-wrap: wrap;
-      gap: 10px;
-      max-height: 200px;
+      gap: 8px;
+      max-height: 220px;
       overflow-y: auto;
-      padding: 4px;
-      margin-top: 14px;
+      padding: 8px;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 10px;
     }
 
-    .player-chip {
-      background: var(--bg-dark);
-      border: 1px solid var(--accent-blue);
-      color: var(--text-white);
-      padding: 8px 16px;
+    .player-pill {
+      background: rgba(0, 229, 255, 0.15);
+      border: 1px solid var(--accent-cyan);
+      color: var(--text-light);
+      padding: 6px 14px;
       border-radius: 20px;
       font-weight: 600;
+      font-size: 0.95rem;
+      animation: popIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
 
-    .timer-bar-container {
-      width: 100%;
-      height: 10px;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 6px;
-      overflow: hidden;
-      margin: 18px 0;
+    @keyframes popIn {
+      from { transform: scale(0.6); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
     }
 
-    .timer-bar {
-      height: 100%;
-      width: 100%;
-      background: linear-gradient(90deg, var(--accent-cyan), var(--accent-gold));
-      transition: width 1s linear;
+    /* QUESTION & ANSWERS */
+    .timer-ring {
+      font-size: 2.2rem;
+      font-weight: 900;
+      color: var(--gold);
+      margin: 10px 0;
     }
-
-    .question-title { font-size: 1.6rem; line-height: 1.35; margin-bottom: 24px; }
 
     .answers-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 16px;
-      margin-bottom: 24px;
+      margin-top: 20px;
+      width: 100%;
     }
 
-    .answer-card {
-      background: var(--bg-card-alt);
-      border: 2px solid rgba(255, 255, 255, 0.12);
-      border-radius: 12px;
+    @media (max-width: 600px) {
+      .answers-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .answer-btn {
+      background: var(--bg-secondary);
+      border: 2px solid rgba(0, 229, 255, 0.3);
+      color: var(--text-light);
       padding: 20px;
-      font-size: 1.1rem;
-      font-weight: 600;
-      color: var(--text-white);
+      border-radius: 14px;
+      font-size: 1.15rem;
+      font-weight: 700;
+      cursor: pointer;
       text-align: left;
+      min-height: 80px;
       display: flex;
       align-items: center;
-      gap: 14px;
+      gap: 12px;
+      transition: all 0.15s ease;
+      width: 100%;
     }
 
-    .answer-letter {
-      background: var(--bg-dark);
-      color: var(--accent-cyan);
-      width: 38px;
-      height: 38px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 8px;
-      font-weight: 800;
-      flex-shrink: 0;
+    .answer-btn:hover:not(:disabled) {
+      border-color: var(--accent-cyan);
+      background: #10254c;
+      transform: translateY(-2px);
     }
 
-    .answer-card.correct {
-      background: rgba(6, 214, 160, 0.25) !important;
-      border-color: var(--color-correct) !important;
-      color: #e0fbf4 !important;
+    .answer-btn:disabled {
+      cursor: default;
+      opacity: 0.9;
     }
 
-    .answer-card.incorrect {
-      background: rgba(239, 71, 111, 0.2) !important;
-      border-color: var(--color-incorrect) !important;
-      opacity: 0.6;
+    .answer-btn.selected {
+      border-color: var(--accent-cyan);
+      background: rgba(0, 229, 255, 0.25);
     }
 
-    .feedback-box {
-      background: var(--bg-dark);
-      border-left: 4px solid var(--accent-gold);
-      border-radius: 8px;
-      padding: 16px 20px;
-      margin-top: 18px;
-      display: none;
+    .answer-btn.correct-highlight {
+      background: rgba(0, 230, 118, 0.25) !important;
+      border-color: var(--correct) !important;
+      color: #ffffff !important;
     }
 
-    .leaderboard-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-    .leaderboard-table th { text-align: left; padding: 12px 16px; color: var(--text-dim); border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
-    .leaderboard-table td { padding: 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); font-size: 1.15rem; font-weight: 600; }
-    .rank-cell { width: 80px; font-weight: 800; }
-    .score-cell { text-align: right; color: var(--accent-gold); font-weight: 800; }
+    .answer-btn.wrong-highlight {
+      background: rgba(255, 23, 68, 0.2) !important;
+      border-color: var(--incorrect) !important;
+      opacity: 0.7;
+    }
 
-    .podium-1 { background: rgba(255, 190, 11, 0.15); border-left: 4px solid var(--accent-gold); }
-    .podium-2 { background: rgba(160, 174, 192, 0.12); border-left: 4px solid #cbd5e0; }
-    .podium-3 { background: rgba(205, 127, 50, 0.12); border-left: 4px solid #cd7f32; }
-
-    .player-wrap { max-width: 480px; margin: 0 auto; }
-    .player-answers { display: flex; flex-direction: column; gap: 14px; }
-    .mobile-btn { padding: 20px; font-size: 1.15rem; border-radius: 14px; min-height: 72px; cursor: pointer; text-align: left; justify-content: flex-start; }
-
-    .role-bar { margin-bottom: 14px; font-size: 0.85rem; color: var(--text-dim); display: flex; justify-content: space-between; }
-    .role-bar a { color: var(--accent-cyan); text-decoration: underline; cursor: pointer; }
-
-    /* Points Result Banner on Mobile */
-    .result-badge {
-      font-size: 2.2rem;
-      font-weight: 900;
-      padding: 12px 24px;
-      border-radius: 16px;
+    .badge-icon {
+      font-size: 1.3rem;
       display: inline-block;
-      margin: 12px 0;
-    }
-    .result-badge.correct {
-      background: rgba(6, 214, 160, 0.2);
-      color: var(--color-correct);
-      border: 2px solid var(--color-correct);
-    }
-    .result-badge.incorrect {
-      background: rgba(239, 71, 111, 0.2);
-      color: var(--color-incorrect);
-      border: 2px solid var(--color-incorrect);
+      min-width: 28px;
     }
 
-    @media (max-width: 768px) {
-      .container { padding: 18px; }
-      .lobby-grid { grid-template-columns: 1fr; }
-      .answers-grid { grid-template-columns: 1fr; }
+    /* LEADERBOARD TABLE */
+    .leaderboard-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+    }
+
+    .leaderboard-table th, .leaderboard-table td {
+      padding: 12px 16px;
+      text-align: left;
+    }
+
+    .leaderboard-table tr {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .leaderboard-table tr:first-child {
+      background: rgba(255, 193, 7, 0.15);
+      border-radius: 10px;
+      font-weight: 800;
+    }
+
+    .rank-cell {
+      font-size: 1.2rem;
+      font-weight: 800;
+      width: 50px;
+    }
+
+    .status-banner {
+      background: rgba(0, 229, 255, 0.1);
+      border: 1px solid var(--accent-cyan);
+      color: var(--accent-cyan);
+      padding: 12px;
+      border-radius: 10px;
+      margin: 14px 0;
+      font-weight: 700;
+    }
+
+    .hidden {
+      display: none !important;
     }
   </style>
 </head>
 <body>
 
-  <!-- ================= HOST INTERFACE ================= -->
-  <div id="host-view" class="container" style="display: none;">
-    <div class="role-bar">
-      <span>Facilitator Screen (Projector / Main Display)</span>
-      <span>
-        <a id="host-open-tester-btn" href="#" target="_blank" style="color: var(--accent-gold); font-weight: 700;">🎮 Open Player in New Tab</a>
-      </span>
+  <div class="container">
+
+    <!-- ==========================================================================
+         ROLE SELECTION (DEFAULT IF NO URL PARAM)
+         ========================================================================== -->
+    <div id="screen-entry" class="card">
+      <div class="brand-badge">Cotality Learning & Development</div>
+      <h1>Flash Focus: Cotality Estimate</h1>
+      <p style="color: var(--text-muted); margin: 12px 0 24px;">
+        Interactive Carrier Knowledge Challenge
+      </p>
+
+      <div style="display: flex; flex-direction: column; gap: 14px; max-width: 320px; margin: 0 auto;">
+        <button class="btn" onclick="initHost()">🎙️ Host / Facilitator Screen</button>
+        <button class="btn btn-secondary" onclick="showPlayerJoin()">📱 Player / Learner Screen</button>
+      </div>
     </div>
 
-    <!-- HOST LOBBY -->
-    <div id="host-screen-lobby" class="screen active">
-      <div class="host-header">
-        <div>
-          <span class="badge badge-easy">Cotality Training Knowledge Check</span>
-          <h1 style="margin-top: 6px;">⚡ Flash Focus: Estimate Challenge</h1>
-        </div>
-        <button id="btn-start-game" class="btn btn-gold" onclick="hostStartGame()">Start Game 🚀</button>
-      </div>
+    <!-- ==========================================================================
+         HOST SCREEN LOBBY
+         ========================================================================== -->
+    <div id="host-lobby" class="card hidden">
+      <div class="brand-badge">Facilitator Control Lobby</div>
+      <h2>Cotality Estimate Knowledge Challenge</h2>
+      <p style="color: var(--text-muted);">Instruct learners to scan the QR code or enter the Room Code.</p>
 
       <div class="lobby-grid">
-        <div class="qr-card">
-          <div style="font-size: 0.95rem; color: var(--text-dim); font-weight: 600;">Scan with phone camera to join:</div>
-          
-          <!-- Embedded Live QR Code -->
-          <div id="qrcode"></div>
-
-          <div>
-            <div style="font-size: 0.85rem; color: var(--text-dim);">ROOM CODE:</div>
-            <div id="host-room-code-display" class="room-code-tag">------</div>
+        <div style="text-align: center;">
+          <div class="qr-container">
+            <div id="host-qrcode"></div>
           </div>
-
-          <div style="font-size: 0.85rem; color: var(--text-dim); word-break: break-all; margin-top: 4px;">
-            <a id="host-join-url-link" href="#" target="_blank" style="color: var(--accent-cyan); text-decoration: underline; font-weight: 600;">Generating direct join URL...</a>
-          </div>
-
-          <button class="btn btn-secondary" style="padding: 6px 14px; font-size: 0.8rem;" onclick="copyJoinLink()">📋 Copy Direct Join Link</button>
-        </div>
-
-        <div class="player-roster">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <h3>Connected Players (<span id="host-player-count">0</span>)</h3>
-            <span class="badge badge-easy" id="host-net-status">Ready</span>
-          </div>
-          <div id="host-player-chips" class="player-chips">
-            <span id="host-roster-placeholder" style="color: var(--text-dim); font-size: 0.95rem;">Waiting for learners to scan or join...</span>
-          </div>
-          <div style="margin-top: auto; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; gap: 8px;">
-            <button class="btn btn-secondary" style="padding: 8px 14px; font-size: 0.85rem;" onclick="addSimulatedPlayer()">+ Add Test Player</button>
-            <a id="host-direct-join-btn" href="#" target="_blank" class="btn btn-secondary" style="padding: 8px 14px; font-size: 0.85rem; margin-left: auto;">Join as Player (New Tab) ↗</a>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- HOST QUESTION SCREEN -->
-    <div id="host-screen-question" class="screen">
-      <div class="host-header" style="padding-bottom: 12px; margin-bottom: 12px;">
-        <div style="display: flex; align-items: center; gap: 14px;">
-          <span id="host-q-badge" class="badge badge-moderate">Question 1/6</span>
-          <span id="host-difficulty-badge" class="badge badge-easy">Easy</span>
-        </div>
-        <div style="display: flex; align-items: center; gap: 18px;">
-          <div style="font-weight: 700;">Responses: <span id="host-answered-count" style="color: var(--accent-cyan);">0</span> / <span id="host-total-players-count">0</span></div>
-          <button id="btn-reveal-answer" class="btn btn-secondary" style="padding: 8px 18px; font-size: 0.95rem;" onclick="hostRevealAnswer()">Reveal Answer</button>
-        </div>
-      </div>
-
-      <div class="timer-bar-container">
-        <div id="host-timer-bar" class="timer-bar"></div>
-      </div>
-
-      <div style="display: flex; justify-content: space-between; align-items: baseline;">
-        <h2 id="host-question-text" class="question-title">Question prompt goes here...</h2>
-        <div id="host-timer-text" style="font-size: 2.2rem; font-weight: 900; color: var(--accent-cyan); margin-left: 20px;">20</div>
-      </div>
-
-      <div id="host-answers-container" class="answers-grid"></div>
-
-      <div id="host-feedback-box" class="feedback-box">
-        <div style="font-weight: 800; color: var(--accent-gold); margin-bottom: 4px;">💡 Explanation:</div>
-        <div id="host-explanation-text" style="line-height: 1.4; color: #f0f4f8;"></div>
-        <div id="host-source-text" style="font-size: 0.85rem; color: var(--text-dim); margin-top: 8px;"></div>
-      </div>
-
-      <div id="host-question-controls" style="margin-top: 24px; display: none; justify-content: flex-end;">
-        <button class="btn" onclick="hostNextQuestion()">View Leaderboard 📊</button>
-      </div>
-    </div>
-
-    <!-- HOST INTERMEDIATE LEADERBOARD -->
-    <div id="host-screen-leaderboard" class="screen">
-      <div class="host-header">
-        <h2>📊 Current Leaderboard</h2>
-        <button class="btn btn-gold" onclick="hostResumeNextQuestion()">Next Question ➡️</button>
-      </div>
-      <table class="leaderboard-table">
-        <thead><tr><th class="rank-cell">Rank</th><th>Learner</th><th class="score-cell">Points</th></tr></thead>
-        <tbody id="host-leaderboard-body"></tbody>
-      </table>
-    </div>
-
-    <!-- HOST FINAL LEADERBOARD -->
-    <div id="host-screen-final" class="screen" style="text-align: center;">
-      <span class="badge badge-moderate" style="font-size: 1.1rem; padding: 8px 24px; margin-bottom: 12px;">🏆 Challenge Complete!</span>
-      <h1 style="font-size: 2.6rem; color: var(--accent-gold); margin-bottom: 8px;">FINAL LEADERBOARD</h1>
-      <p style="color: var(--text-dim); font-size: 1.2rem; margin-bottom: 24px;">Congratulations to today's Training Challenge Champion!</p>
-
-      <div style="background: rgba(255, 190, 11, 0.1); border: 2px solid var(--accent-gold); border-radius: var(--border-radius); padding: 24px; max-width: 600px; margin: 0 auto 32px auto;">
-        <div style="font-size: 1.2rem; color: var(--text-dim);">🥇 Champion:</div>
-        <div id="champion-name" style="font-size: 2.4rem; font-weight: 900; color: #fff;">--</div>
-        <div id="champion-score" style="font-size: 1.4rem; color: var(--accent-gold); font-weight: 800; margin-top: 6px;">0 pts</div>
-      </div>
-
-      <table class="leaderboard-table" style="max-width: 750px; margin: 0 auto 32px auto;">
-        <thead><tr><th class="rank-cell">Rank</th><th>Learner</th><th class="score-cell">Final Score</th></tr></thead>
-        <tbody id="host-final-leaderboard-body"></tbody>
-      </table>
-
-      <div style="display: flex; justify-content: center; gap: 16px;">
-        <button class="btn btn-secondary" onclick="hostResetGame()">Play Again</button>
-        <button class="btn" onclick="location.reload()">Return to Lobby</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ================= PLAYER INTERFACE ================= -->
-  <div id="player-view" class="container player-wrap" style="display: none;">
-    <div class="role-bar">
-      <span>Learner Mobile Interface</span>
-      <span id="player-room-indicator" style="color: var(--accent-cyan); font-weight: 700;">Room: --</span>
-    </div>
-
-    <!-- PLAYER JOIN SCREEN -->
-    <div id="player-screen-join" class="screen active">
-      <div style="text-align: center; margin-bottom: 24px;">
-        <span class="badge badge-easy">Flash Focus</span>
-        <h2 style="margin-top: 8px;">Join Training Game</h2>
-      </div>
-
-      <div style="display: flex; flex-direction: column; gap: 16px;">
-        <div>
-          <label style="display: block; font-size: 0.9rem; margin-bottom: 6px; color: var(--text-dim);">Room Code</label>
-          <input id="player-input-room" type="text" placeholder="e.g. FLASH1" maxlength="6" style="width: 100%; padding: 14px; background: var(--bg-dark); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; color: #fff; font-size: 1.2rem; font-weight: 700; text-transform: uppercase; text-align: center;">
+          <div class="code-display" id="host-room-code">----</div>
+          <div id="host-direct-url" style="font-size: 0.85rem; color: var(--text-muted); word-break: break-all;"></div>
+          <button class="btn btn-secondary" style="margin-top: 10px; font-size: 0.9rem;" onclick="copyJoinUrl()">📋 Copy Join Link</button>
         </div>
 
         <div>
-          <label style="display: block; font-size: 0.9rem; margin-bottom: 6px; color: var(--text-dim);">Your Name or Nickname</label>
-          <input id="player-input-name" type="text" placeholder="e.g. Alex M." maxlength="20" style="width: 100%; padding: 14px; background: var(--bg-dark); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; color: #fff; font-size: 1.1rem; font-weight: 600;">
+          <h3>Connected Players (<span id="connected-count">0</span>)</h3>
+          <div class="player-pill-grid" id="lobby-player-list">
+            <!-- Dynamic Player Chips -->
+          </div>
+          <button id="btn-start-game" class="btn btn-gold" style="width: 100%; margin-top: 24px;" onclick="startGame()" disabled>
+            🚀 Start Challenge
+          </button>
         </div>
-
-        <div id="player-join-error" style="color: var(--color-incorrect); font-size: 0.9rem; display: none;"></div>
-        <button class="btn mobile-btn" onclick="playerJoinGame()">Join Game 🚀</button>
       </div>
     </div>
 
-    <!-- PLAYER WAITING LOBBY -->
-    <div id="player-screen-waiting" class="screen" style="text-align: center; padding: 40px 0;">
-      <div style="font-size: 3.5rem; margin-bottom: 12px;">🎯</div>
-      <h2>You're In, <span id="player-display-name" style="color: var(--accent-cyan);">Learner</span>!</h2>
-      <p style="color: var(--text-dim); margin: 12px 0 24px 0;">Watch the facilitator screen for the countdown.</p>
-      <div class="badge badge-moderate">Waiting for Host to start...</div>
-    </div>
-
-    <!-- PLAYER QUESTION SCREEN -->
-    <div id="player-screen-question" class="screen">
+    <!-- ==========================================================================
+         HOST QUESTION SCREEN
+         ========================================================================== -->
+    <div id="host-question" class="card hidden">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-        <span id="player-q-number" class="badge badge-easy">Q1</span>
-        <div style="font-weight: 700; color: var(--accent-gold);">Score: <span id="player-current-score">0</span></div>
+        <span class="brand-badge" id="host-q-number">Question 1 of 10</span>
+        <span style="font-weight: 700; color: var(--accent-cyan);" id="host-q-difficulty">Difficulty: Moderate</span>
       </div>
 
-      <div class="timer-bar-container"><div id="player-timer-bar" class="timer-bar"></div></div>
-      <h3 id="player-q-text" style="font-size: 1.2rem; margin-bottom: 20px;">Question goes here...</h3>
-      <div id="player-answers-box" class="player-answers"></div>
+      <h2 id="host-q-text" style="min-height: 60px; margin-bottom: 8px;">Question text...</h2>
 
-      <div id="player-lock-notice" style="display: none; text-align: center; padding: 30px; background: var(--bg-card-alt); border-radius: var(--border-radius);">
-        <div style="font-size: 2.2rem; margin-bottom: 6px;">🔒</div>
-        <h3>Answer Locked!</h3>
-        <p style="color: var(--text-dim); margin-top: 4px;">Watch the facilitator screen for the explanation and points.</p>
+      <div class="timer-ring" id="host-timer">20s</div>
+
+      <div class="status-banner" id="host-response-banner">
+        Responses: <span id="host-responses-received">0</span> of <span id="host-responses-total">0</span> Players Answered
+      </div>
+
+      <div class="answers-grid" id="host-choices-grid">
+        <!-- Choices shown to players and host -->
+      </div>
+
+      <div id="host-explanation-box" class="card hidden" style="background: rgba(0,0,0,0.3); margin-top: 20px; text-align: left;">
+        <h4 style="color: var(--accent-cyan); margin-bottom: 6px;">💡 Training Reference & Explanation</h4>
+        <p id="host-explanation-text" style="font-size: 1rem; color: #e2ecf9;"></p>
+        <div id="host-source-text" style="margin-top: 8px; font-size: 0.85rem; color: var(--gold);"></div>
+      </div>
+
+      <div style="margin-top: 20px; display: flex; gap: 12px; justify-content: center;">
+        <button id="btn-reveal" class="btn btn-secondary" onclick="revealAnswer()">👁️ Reveal Answer</button>
+        <button id="btn-next-question" class="btn hidden" onclick="nextQuestion()">➡️ Next Question</button>
       </div>
     </div>
 
-    <!-- PLAYER ROUND RESULT & POINTS BREAKDOWN SCREEN -->
-    <div id="player-screen-result" class="screen" style="text-align: center; padding: 24px 10px;">
-      <div id="player-result-icon" style="font-size: 3.5rem; margin-bottom: 6px;">✓</div>
-      <h2 id="player-result-heading">Correct!</h2>
-
-      <div id="player-earned-badge" class="result-badge correct">+1,350 pts</div>
-
-      <div id="player-breakdown-text" style="color: var(--text-dim); font-size: 1rem; margin-bottom: 16px;">
-        1,000 Base Points + 350 Speed Bonus
-      </div>
-
-      <div style="background: var(--bg-card-alt); border-radius: 12px; padding: 16px; margin: 16px auto; max-width: 320px; border: 1px solid rgba(255,255,255,0.1);">
-        <div style="font-size: 0.9rem; color: var(--text-dim);">Total Score:</div>
-        <div id="player-total-score-display" style="font-size: 1.8rem; font-weight: 900; color: var(--accent-gold);">0 pts</div>
-      </div>
-
-      <p style="color: var(--text-dim); margin-top: 8px;">Watch the facilitator screen for standings!</p>
+    <!-- ==========================================================================
+         HOST INTERIM LEADERBOARD SCREEN
+         ========================================================================== -->
+    <div id="host-leaderboard" class="card hidden">
+      <div class="brand-badge">Leaderboard Standings</div>
+      <h2>Current Scores</h2>
+      <table class="leaderboard-table" id="interim-leaderboard-table">
+        <!-- Leaderboard Rows -->
+      </table>
+      <button class="btn btn-gold" onclick="advanceFromLeaderboard()">Continue Challenge ➡️</button>
     </div>
+
+    <!-- ==========================================================================
+         HOST FINAL LEADERBOARD & PODIUM SCREEN
+         ========================================================================== -->
+    <div id="host-final" class="card hidden">
+      <div class="brand-badge">🏆 Training Challenge Concluded</div>
+      <h1 style="color: var(--gold); font-size: 2.5rem; margin-bottom: 8px;">Final Leaderboard</h1>
+      <p style="font-size: 1.25rem; font-weight: 700; margin-bottom: 20px;">
+        Congratulations to today's Training Challenge Champion: 
+        <span id="champion-name" style="color: var(--accent-cyan); text-decoration: underline;">Champion</span>!
+      </p>
+
+      <table class="leaderboard-table" id="final-leaderboard-table">
+        <!-- Full Leaderboard -->
+      </table>
+
+      <div style="display: flex; gap: 12px; justify-content: center; margin-top: 24px;">
+        <button class="btn" onclick="restartSameGame()">🔄 Play Again</button>
+        <button class="btn btn-secondary" onclick="location.reload()">🏠 Return to Lobby</button>
+      </div>
+    </div>
+
+    <!-- ==========================================================================
+         PLAYER / LEARNER JOIN SCREEN
+         ========================================================================== -->
+    <div id="player-join" class="card hidden">
+      <div class="brand-badge">Player Join</div>
+      <h2>Join Cotality Challenge</h2>
+      <p style="color: var(--text-muted); margin-bottom: 18px;">No login required. Enter your name and room code.</p>
+
+      <div style="max-width: 320px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px;">
+        <input type="text" id="player-room-input" placeholder="4-Digit Room Code" maxlength="6" 
+          style="padding: 14px; border-radius: 10px; border: 1px solid var(--accent-cyan); background: rgba(0,0,0,0.3); color: white; text-align: center; font-size: 1.2rem; font-weight: 800; text-transform: uppercase;">
+        
+        <input type="text" id="player-name-input" placeholder="Your Name or Nickname" maxlength="20"
+          style="padding: 14px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: white; text-align: center; font-size: 1.1rem; font-weight: 700;">
+
+        <button class="btn" onclick="joinGameAsPlayer()">🚀 Join Game</button>
+      </div>
+    </div>
+
+    <!-- ==========================================================================
+         PLAYER WAITING SCREEN
+         ========================================================================== -->
+    <div id="player-waiting" class="card hidden">
+      <div class="brand-badge">You're In!</div>
+      <h2 id="player-welcome-name">Welcome!</h2>
+      <p style="color: var(--text-muted); margin: 16px 0;">Connected to Room <strong id="player-connected-room" style="color: var(--accent-cyan);">----</strong></p>
+      <div class="status-banner">
+        ⏳ Watch the facilitator screen. The game will begin shortly!
+      </div>
+    </div>
+
+    <!-- ==========================================================================
+         PLAYER QUESTION SCREEN (CRITICAL: ALLOWS EVERY PLAYER INDEPENDENT INPUT)
+         ========================================================================== -->
+    <div id="player-question" class="card hidden">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+        <span class="brand-badge" id="player-q-number">Question 1 of 10</span>
+        <span style="font-weight: 800; color: var(--gold);" id="player-score-display">0 pts</span>
+      </div>
+
+      <div class="timer-ring" id="player-timer">20s</div>
+      <h3 id="player-q-text" style="margin-bottom: 16px; font-size: 1.2rem;">Question prompt...</h3>
+
+      <div id="player-answers-container" style="display: flex; flex-direction: column; gap: 12px; width: 100%;">
+        <!-- Four Large Touch Targets -->
+      </div>
+
+      <div id="player-locked-banner" class="status-banner hidden" style="background: rgba(0, 230, 118, 0.15); border-color: var(--correct); color: var(--correct);">
+        ✓ Answer Locked. Watch the facilitator screen for results!
+      </div>
+    </div>
+
+    <!-- ==========================================================================
+         PLAYER ROUND REVEAL SCREEN
+         ========================================================================== -->
+    <div id="player-reveal" class="card hidden">
+      <h2 id="player-result-title">Round Results</h2>
+      <p id="player-result-points" style="font-size: 1.4rem; font-weight: 800; margin: 14px 0; color: var(--gold);">+0 Points</p>
+      <div class="status-banner">
+        👀 Look up at the facilitator screen for score breakdown!
+      </div>
+    </div>
+
   </div>
 
-  <!-- ================= JAVASCRIPT LOGIC ================= -->
   <script>
     /* ==========================================================================
-       QUESTION BANK
+       QUESTION BANK (Authoritative Cotality Estimate & Workspace Training)
        ========================================================================== */
     const QUESTIONS = [
       {
-        question: "When working in Cotality Estimate, when will your estimate work become visible within Claims Workspace?",
+        question: "In Cotality Estimate, which workflow minimizes training hurdles for new adjusters by guiding damage entry step-by-step?",
         choices: [
-          "Automatically in real time as you edit line items",
-          "When you upload your claim file",
-          "Only after the claim status is marked as 'Approved'",
-          "Whenever you toggle between 2-D and 3-D diagram modes"
+          "Guided question-and-answer workflow",
+          "Manual spreadsheet assembly import",
+          "Direct CAD scripting mode",
+          "Unverified freeform loss text entry"
         ],
-        correctAnswer: 1,
-        explanation: "All work completed in Estimate becomes visible within Claims Workspace once you upload your claim file.",
+        correctAnswer: 0,
+        explanation: "Cotality Estimate utilizes guided question-and-answer and diagram-based estimation workflows to standardize scoping and minimize onboarding time.",
         difficulty: "Easy",
-        points: 1000,
         seconds: 15,
-        source: "Module 1: Claims Workspace vs. Estimate"
+        source: "Cotality Estimate Product Guide"
       },
       {
-        question: "What is the primary difference between Segment Mode and Build Out Mode when diagramming interior rooms?",
+        question: "Which Cotality application is specifically used on mobile/desktop to capture photo evidence with orientation tags and GPS metadata?",
         choices: [
-          "Segment Mode modifies the shape of a room; Build Out Mode builds a new room from an adjacent wall.",
-          "Segment Mode adds doors and windows; Build Out Mode adds blocks and stairs.",
-          "Segment Mode creates 3-D roof shapes; Build Out Mode creates 2-D exterior elevations.",
-          "Segment Mode calculates room volume; Build Out Mode rotates rooms to face North."
+          "Cotality Inspect™",
+          "Cotality Settle Assist",
+          "Cotality Dispatch Pro",
+          "Cotality Connect Legacy"
         ],
         correctAnswer: 0,
-        explanation: "Segment Mode is used to modify room shapes, while Build Out Mode builds new rooms directly from an adjacent wall.",
+        explanation: "Cotality Inspect™ conducts loss site inspections and embeds orientation tags and GPS markers into photos to establish an undisputed single source of truth.",
         difficulty: "Easy",
-        points: 1000,
         seconds: 15,
-        source: "Module 4: Section 4.4 - Segment & Build Out Mode"
+        source: "Cotality Inspect Operational Overview"
       },
       {
-        question: "When diagramming a core roof shape, what is the recommended order (PER) for adjusting dimensions?",
+        question: "When applying depreciation to line items in Cotality Estimate, what differentiates recoverable from non-recoverable depreciation?",
         choices: [
-          "Perimeter, Elevation, Rafter Length",
-          "Pitch, Eave Length, Rafter Length",
-          "Plan Area, Exterior Wall, Ridge Height",
-          "Pitch, Elevation, Ridge Length"
-        ],
-        correctAnswer: 1,
-        explanation: "The recommended sequence for dimension adjustments in roofing is PER: 1. Pitch, 2. Eave Length, 3. Rafter Length.",
-        difficulty: "Moderate",
-        points: 1000,
-        seconds: 20,
-        source: "Module 6: Section 6.3 - Roofing Dimensions (PER)"
-      },
-      {
-        question: "An estimator needs to apply roofing line items to an entire roofplan rather than a single slope. What is the recommended method?",
-        choices: [
-          "Drop the items onto the open canvas rather than directly on the roof",
-          "Double-click the ridge line in the Wall Editor",
-          "Select all dormers and link them as subrooms of the main structure",
-          "Drag and drop the Roofplan directly into the Claims Workspace chat window"
+          "Recoverable depreciation is paid to the insured once repairs are completed and incurred",
+          "Non-recoverable depreciation is refunded automatically by the reinsurer",
+          "Recoverable depreciation only applies to sales tax calculations",
+          "Non-recoverable depreciation is determined solely by the contractor's invoice"
         ],
         correctAnswer: 0,
-        explanation: "Dropping items onto the open canvas applies them across the entire roofplan, whereas dropping directly on a slope applies only to that slope.",
+        explanation: "Recoverable depreciation represents holdback paid out once proof of completed repair or replacement is submitted, whereas non-recoverable depreciation is withheld permanently.",
         difficulty: "Moderate",
-        points: 1000,
         seconds: 20,
-        source: "Module 6: Section 6.6 - Estimating on Roofs"
+        source: "Carrier Policy Standards & Estimation Guide"
       },
       {
-        question: "How do Roof Shape Properties differ from Roofplan Properties in Cotality Estimate?",
+        question: "What is the primary role of Cotality Validate™ (formerly QA Assist / Quality Connect)?",
         choices: [
-          "Roof Shape Properties apply to a selected roof shape; Roofplan Properties apply to the entire roofplan and any shapes added to it.",
-          "Roof Shape Properties set sales tax rates; Roofplan Properties set material pricelists.",
-          "Roof Shape Properties define 3-D AutoCreate rules; Roofplan Properties define interior ceiling textures.",
-          "Roof Shape Properties are locked to vendor estimates; Roofplan Properties can only be viewed in Offline Mode."
+          "Automate estimate compliance audits against carrier rules to prevent claims leakage",
+          "Process online credit card payments for independent adjusters",
+          "Perform automated background checks on field contractors",
+          "Generate aerial satellite imagery without CAD data"
         ],
         correctAnswer: 0,
-        explanation: "Roof Shape Properties apply strictly to a selected shape, whereas Roofplan Properties apply globally across the full roofplan.",
+        explanation: "Cotality Validate™ automatically audits estimates against carrier guidelines and rule sets, driving straight-through quality assurance and reducing leakage.",
         difficulty: "Moderate",
-        points: 1000,
         seconds: 20,
-        source: "Module 6: Section 6.5 - Roof Shape vs. Roofplan Properties"
+        source: "Cotality Validate Training Guide"
       },
       {
-        question: "When reviewing vendor estimates for a claim, what requirement must be met before an estimate from a vendor will appear on the Claim Totals Page?",
+        question: "An adjuster is creating a roof diagram. How does Cotality Claims Scope™ automate repair versus replacement decisions?",
         choices: [
-          "The vendor estimate must be in an 'Approved' status.",
-          "The vendor estimate must be marked as a 'Temporary Claim.'",
-          "The estimate must contain an Age/Life depreciation of at least 12 years.",
-          "The estimate must be generated using AutoCreate from a 3-D Exterior Plan."
+          "By comparing CAD damage levels against material- and state-specific thresholds",
+          "By automatically selecting full replacement regardless of slope pitch",
+          "By requiring manual phone authorization from the desk examiner",
+          "By deferring all damage decisions to the policyholder's roofing contractor"
         ],
         correctAnswer: 0,
-        explanation: "Estimates from external vendors must be in an Approved status before becoming calculated on the Claims Totals Page.",
+        explanation: "Cotality Scope applies aerial CAD dimensions and tests actual damage severity against carrier guidelines and state thresholds to automate repair vs. replacement outcomes.",
         difficulty: "Challenging",
-        points: 1000,
         seconds: 30,
-        source: "Module 10: Section 10.3 - Claim Totals Page"
+        source: "Claims Scope Best Practices Module"
+      },
+      {
+        question: "How does Cotality Claims Workspace™ integrate with Cotality Estimate™ on a property assignment?",
+        choices: [
+          "Workspace acts as the central repository and communication hub, syncing data with Estimate",
+          "Workspace only generates PDF invoices after the claim is closed",
+          "Workspace replaces the need for any field diagramming or itemization",
+          "Estimate operates offline with no connection or data transfer to Workspace"
+        ],
+        correctAnswer: 0,
+        explanation: "Cotality Claims Workspace™ serves as the overarching document repository and workflow hub, working in lockstep with Estimate to manage assignments end-to-end.",
+        difficulty: "Moderate",
+        seconds: 20,
+        source: "Workspace & Estimate Level 1 Certification"
+      },
+      {
+        question: "When creating an estimate for a residential loss, how should General Contractor Overhead & Profit (O&P) typically be applied?",
+        choices: [
+          "Applied to trades requiring complex, multi-trade coordination per carrier guidelines",
+          "Applied automatically to every individual line item regardless of scope",
+          "Added as an unverified lump sum under miscellaneous contents",
+          "Calculated only on deductible payments made by the policyholder"
+        ],
+        correctAnswer: 0,
+        explanation: "Carrier guidelines stipulate O&P is applicable when the nature of the loss requires general contractor supervision and coordination across multiple distinct trades.",
+        difficulty: "Challenging",
+        seconds: 30,
+        source: "Estimating Assemblies & O&P Protocols"
+      },
+      {
+        question: "What is the recommended practice when an adjuster encounters damage outside normal pricing database assemblies?",
+        choices: [
+          "Document with photos, obtain market bids, and input as a justified line item with detailed notes",
+          "Leave the item off the estimate until supplemental subrogation",
+          "Double the price of an unrelated drywall item to compensate",
+          "Instruct the insured to pay out-of-pocket without carrier review"
+        ],
+        correctAnswer: 0,
+        explanation: "Items requiring custom pricing must be thoroughly photo-documented, supported by local labor/material quotes, and entered with explicit adjuster justification notes.",
+        difficulty: "Moderate",
+        seconds: 20,
+        source: "Cotality Level 2 Proficiency Lab"
+      },
+      {
+        question: "How does Cotality Estimate handle monthly updates to its construction pricing database?",
+        choices: [
+          "Updates monthly with real-time labor, material, and regional cost trend research",
+          "Maintains fixed annual prices that never fluctuate during disaster events",
+          "Imports random pricing feeds from local home improvement store ads",
+          "Requires each carrier to manually key in every single trade price each week"
+        ],
+        correctAnswer: 0,
+        explanation: "Cotality's research-backed claims construction pricing database is refreshed every month based on verified regional material, labor, and economic trends.",
+        difficulty: "Easy",
+        seconds: 15,
+        source: "Cotality Claims Pricing Database Documentation"
+      },
+      {
+        question: "An adjuster finishes a field scope and notices a supplement request. What is the first protocol in Workspace?",
+        choices: [
+          "Review original line items against new evidence and document difference in revisions",
+          "Delete the original estimate and start a new claim number",
+          "Approve all requested items immediately without comparing field photos",
+          "Close the file and route it directly to underwriting for cancellation"
+        ],
+        correctAnswer: 0,
+        explanation: "When handling supplements, adjusters must compare the requested items against prior inspection notes and photos, noting specific variances in the claim revision audit trail.",
+        difficulty: "Challenging",
+        seconds: 30,
+        source: "Carrier Revision & Supplement Guidelines"
       }
     ];
 
     /* ==========================================================================
-       STATE & COMMUNICATION ENGINE
+       REAL-TIME MULTIPLAYER STATE (PeerJS WebRTC Engine)
        ========================================================================== */
-    const APP_PREFIX = "FLASHFOCUS_";
-    let isHostMode = false;
-    let roomCode = "";
-    let localBroadcast = null;
     let peer = null;
+    let myRole = null;              // 'host' or 'player'
+    let myRoomCode = '';
+    let myPlayerId = 'player_' + Math.random().toString(36).substring(2, 9);
+    let myPlayerName = '';
+    let myCurrentScore = 0;
+    let myCorrectCount = 0;
+    let myTotalResponseTime = 0;
+    let hostConnections = {};       // Host: { playerId: DataConnection }
+    let playerHostConn = null;      // Player: DataConnection to Host
 
-    // Host State
-    let connectedPlayers = new Map();
+    // Host Game State
+    let players = {};               // { playerId: { name, score, correctCount, totalTime } }
     let currentQuestionIndex = 0;
-    let questionTimer = null;
-    let secondsLeft = 0;
-    let questionStartTime = 0;
-    let hostResponsesReceived = 0;
-
-    // Player State
-    let playerClient = {
-      peerId: null,
-      name: "",
-      score: 0,
-      conn: null,
-      hasAnswered: false,
-      selectedChoice: null,
-      answerTimeSec: 0,
-      questionStartTime: 0
-    };
+    let questionTimerInterval = null;
+    let timeLeft = 20;
+    let currentAnswers = {};        // { playerId: { choiceIndex, timeRemaining } } - PER PLAYER ISOLATION!
 
     /* ==========================================================================
-       STARTUP ROUTING
+       INITIALIZATION ROUTER
        ========================================================================== */
-    window.addEventListener("DOMContentLoaded", () => {
+    window.addEventListener('DOMContentLoaded', () => {
       const urlParams = new URLSearchParams(window.location.search);
-      const urlRoom = urlParams.get("room");
-      const modeParam = urlParams.get("mode");
+      const roomParam = urlParams.get('room');
+      const roleParam = urlParams.get('role');
 
-      if (modeParam === "player" || (urlRoom && modeParam !== "host")) {
-        // Run as Player
-        isHostMode = false;
-        document.getElementById("host-view").style.display = "none";
-        document.getElementById("player-view").style.display = "block";
-        if (urlRoom) {
-          document.getElementById("player-input-room").value = urlRoom.toUpperCase();
-          document.getElementById("player-room-indicator").innerText = "Room: " + urlRoom.toUpperCase();
-        }
-      } else {
-        // Run as Facilitator Host
-        isHostMode = true;
-        document.getElementById("player-view").style.display = "none";
-        document.getElementById("host-view").style.display = "block";
+      if (roleParam === 'host') {
         initHost();
+      } else if (roomParam) {
+        showPlayerJoin();
+        document.getElementById('player-room-input').value = roomParam.toUpperCase();
       }
     });
 
+    function showScreen(screenId) {
+      const screens = [
+        'screen-entry', 'host-lobby', 'host-question', 'host-leaderboard', 
+        'host-final', 'player-join', 'player-waiting', 'player-question', 'player-reveal'
+      ];
+      screens.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.add('hidden');
+      });
+      const target = document.getElementById(screenId);
+      if (target) target.classList.remove('hidden');
+    }
+
     /* ==========================================================================
-       FACILITATOR HOST LOGIC
+       HOST CONTROLLER & PEER LOGIC
        ========================================================================== */
     function initHost() {
-      roomCode = "FLASH" + Math.floor(10 + Math.random() * 90);
-      document.getElementById("host-room-code-display").innerText = roomCode;
+      myRole = 'host';
+      showScreen('host-lobby');
 
-      const currentUrlNoParams = window.location.href.split("?")[0];
-      const playerJoinUrl = `${currentUrlNoParams}?mode=player&room=${roomCode}`;
+      // Generate random 4-character uppercase code
+      myRoomCode = Math.random().toString(36).substring(2, 6).toUpperCase();
+      document.getElementById('host-room-code').innerText = myRoomCode;
 
-      const linkElem = document.getElementById("host-join-url-link");
-      linkElem.innerText = playerJoinUrl;
-      linkElem.href = playerJoinUrl;
+      // Unique peer ID for the host
+      const hostPeerId = 'cotality-flash-' + myRoomCode;
+      peer = new Peer(hostPeerId);
 
-      document.getElementById("host-open-tester-btn").href = playerJoinUrl;
-      document.getElementById("host-direct-join-btn").href = playerJoinUrl;
+      peer.on('open', id => {
+        renderQrCode();
+      });
 
-      renderQR(playerJoinUrl, document.getElementById("qrcode"));
-
-      try {
-        if (typeof BroadcastChannel !== "undefined") {
-          localBroadcast = new BroadcastChannel(APP_PREFIX + roomCode);
-          localBroadcast.onmessage = (e) => handleHostIncoming(e.data);
+      peer.on('error', err => {
+        console.error('PeerJS Host Error:', err);
+        if (err.type === 'unavailable-id') {
+          // Retry with fresh code if collision occurs
+          initHost();
         }
-      } catch (err) {}
+      });
 
-      try {
-        if (typeof Peer !== "undefined") {
-          peer = new Peer(APP_PREFIX + roomCode, { debug: 0 });
-          peer.on("connection", (conn) => {
-            conn.on("data", (data) => handleHostIncoming(data, conn));
-          });
-          peer.on("open", () => {
-            document.getElementById("host-net-status").innerText = "Cloud Online";
-          });
-          peer.on("error", () => {
-            document.getElementById("host-net-status").innerText = "Local Mode";
-          });
-        }
-      } catch (err) {}
+      // Handle incoming player connections
+      peer.on('connection', conn => {
+        conn.on('open', () => {
+          conn.on('data', data => handleHostDataReceived(conn, data));
+        });
+
+        conn.on('close', () => {
+          // Handle disconnects gracefully
+          removePlayer(conn.peer);
+        });
+      });
     }
 
-    function renderQR(text, container) {
-      if (!container) return;
-      container.innerHTML = "";
-      const img = document.createElement("img");
-      img.src = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&margin=2&data=${encodeURIComponent(text)}`;
-      img.alt = "Scan to Join";
-      img.onerror = () => {
-        container.innerHTML = `<div style="color:#0a1128; font-weight:700; font-size:0.85rem; padding:10px;">Open link below</div>`;
-      };
-      container.appendChild(img);
+    function renderQrCode() {
+      const qrEl = document.getElementById('host-qrcode');
+      qrEl.innerHTML = '';
+      
+      const baseUrl = window.location.origin + window.location.pathname;
+      const joinUrl = baseUrl + '?room=' + myRoomCode;
+
+      document.getElementById('host-direct-url').innerText = joinUrl;
+
+      new QRCode(qrEl, {
+        text: joinUrl,
+        width: 170,
+        height: 170,
+        colorDark: "#070f1e",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.M
+      });
     }
 
-    function copyJoinLink() {
-      const url = document.getElementById("host-join-url-link").href;
-      if (navigator.clipboard) {
-        navigator.clipboard.writeText(url).then(() => alert("Direct join link copied to clipboard!"));
-      } else {
-        prompt("Copy this direct join URL:", url);
-      }
+    function copyJoinUrl() {
+      const url = document.getElementById('host-direct-url').innerText;
+      navigator.clipboard.writeText(url).then(() => {
+        alert('Join URL copied to clipboard: ' + url);
+      });
     }
 
-    function handleHostIncoming(data, conn = null) {
+    function handleHostDataReceived(conn, data) {
       if (!data || !data.type) return;
 
-      if (data.type === "PLAYER_JOIN") {
-        connectedPlayers.set(data.playerId, {
-          id: data.playerId,
-          name: data.name,
+      switch(data.type) {
+        case 'PLAYER_JOIN':
+          registerPlayer(conn, data.playerId, data.name);
+          break;
+
+        case 'SUBMIT_ANSWER':
+          // INDEPENDENT PLAYER INTAKE - NEVER BLOCKS SIBLING PLAYERS!
+          recordPlayerAnswer(data.playerId, data.choiceIndex, data.timeRemaining);
+          break;
+      }
+    }
+
+    function registerPlayer(conn, playerId, name) {
+      hostConnections[playerId] = conn;
+      if (!players[playerId]) {
+        players[playerId] = {
+          name: name || 'Player ' + (Object.keys(players).length + 1),
           score: 0,
           correctCount: 0,
-          totalTime: 0,
-          conn: conn
-        });
-        updateRoster();
-
-        const ack = { type: "JOIN_CONFIRMED", name: data.name, room: roomCode };
-        if (conn && conn.open) conn.send(ack);
-        if (localBroadcast) localBroadcast.postMessage({ target: data.playerId, ...ack });
+          totalTime: 0
+        };
       }
+      updateLobbyPlayerList();
+      
+      // Acknowledge connection to player
+      conn.send({ type: 'JOIN_ACCEPTED', roomCode: myRoomCode, name: players[playerId].name });
+    }
 
-      if (data.type === "SUBMIT_ANSWER") {
-        const p = connectedPlayers.get(data.playerId);
-        if (p) {
-          hostResponsesReceived++;
-          document.getElementById("host-answered-count").innerText = hostResponsesReceived;
+    function removePlayer(playerId) {
+      delete hostConnections[playerId];
+      delete players[playerId];
+      updateLobbyPlayerList();
+    }
 
-          const q = QUESTIONS[currentQuestionIndex];
-          const isCorrect = (data.choiceIndex === q.correctAnswer);
-          const timeTaken = Math.max(0.1, (Date.now() - questionStartTime) / 1000);
+    function updateLobbyPlayerList() {
+      const listEl = document.getElementById('lobby-player-list');
+      const countEl = document.getElementById('connected-count');
+      const startBtn = document.getElementById('btn-start-game');
 
-          if (isCorrect) {
-            p.correctCount++;
-            const speedBonus = Math.round(Math.max(0, (1 - (timeTaken / q.seconds))) * 500);
-            p.score += (q.points + speedBonus);
-            p.totalTime += timeTaken;
-          }
+      listEl.innerHTML = '';
+      const playerIds = Object.keys(players);
+      countEl.innerText = playerIds.length;
 
-          if (hostResponsesReceived >= connectedPlayers.size && connectedPlayers.size > 0) {
-            clearInterval(questionTimer);
-            hostRevealAnswer();
-          }
+      playerIds.forEach(id => {
+        const pill = document.createElement('div');
+        pill.className = 'player-pill';
+        pill.innerText = '👤 ' + players[id].name;
+        listEl.appendChild(pill);
+      });
+
+      startBtn.disabled = playerIds.length === 0;
+    }
+
+    function broadcast(payload) {
+      Object.values(hostConnections).forEach(conn => {
+        if (conn && conn.open) {
+          conn.send(payload);
         }
-      }
-    }
-
-    function updateRoster() {
-      const count = connectedPlayers.size;
-      document.getElementById("host-player-count").innerText = count;
-      document.getElementById("host-total-players-count").innerText = count;
-
-      const placeholder = document.getElementById("host-roster-placeholder");
-      if (placeholder) placeholder.style.display = (count > 0) ? "none" : "block";
-
-      const chipsBox = document.getElementById("host-player-chips");
-      chipsBox.innerHTML = "";
-      connectedPlayers.forEach(p => {
-        const chip = document.createElement("div");
-        chip.className = "player-chip";
-        chip.innerText = `👤 ${p.name}`;
-        chipsBox.appendChild(chip);
       });
     }
 
-    function addSimulatedPlayer() {
-      const names = ["Jordan P.", "Sam T.", "Morgan R.", "Casey K."];
-      const name = names[connectedPlayers.size % names.length];
-      const id = "SIM_" + Math.random().toString(36).substring(2, 6);
-      connectedPlayers.set(id, { id: id, name: name, score: 0, correctCount: 0, totalTime: 0 });
-      updateRoster();
-    }
-
-    function hostStartGame() {
+    /* ==========================================================================
+       HOST GAME PROGRESSION
+       ========================================================================== */
+    function startGame() {
       currentQuestionIndex = 0;
-      loadHostQuestion(0);
+      loadQuestion(currentQuestionIndex);
     }
 
-    function loadHostQuestion(idx) {
-      const q = QUESTIONS[idx];
-      hostResponsesReceived = 0;
+    function loadQuestion(index) {
+      currentAnswers = {}; // Reset answers table for this new question!
+      const q = QUESTIONS[index];
+      timeLeft = q.seconds || 20;
 
-      showHostScreen("host-screen-question");
+      showScreen('host-question');
+      document.getElementById('host-q-number').innerText = `Question ${index + 1} of ${QUESTIONS.length}`;
+      document.getElementById('host-q-difficulty').innerText = `Difficulty: ${q.difficulty}`;
+      document.getElementById('host-q-text').innerText = q.question;
+      document.getElementById('host-timer').innerText = timeLeft + 's';
+      document.getElementById('host-explanation-box').classList.add('hidden');
+      document.getElementById('btn-reveal').classList.remove('hidden');
+      document.getElementById('btn-next-question').classList.add('hidden');
 
-      document.getElementById("host-answered-count").innerText = "0";
-      document.getElementById("host-q-badge").innerText = `Question ${idx + 1}/${QUESTIONS.length}`;
-      document.getElementById("host-difficulty-badge").innerText = q.difficulty;
-      document.getElementById("host-difficulty-badge").className = `badge badge-${q.difficulty.toLowerCase()}`;
-      document.getElementById("host-question-text").innerText = q.question;
-      document.getElementById("host-feedback-box").style.display = "none";
-      document.getElementById("host-question-controls").style.display = "none";
-      document.getElementById("btn-reveal-answer").style.display = "inline-flex";
+      updateResponseBanner();
 
-      const box = document.getElementById("host-answers-container");
-      box.innerHTML = "";
-      const letters = ["A", "B", "C", "D"];
+      // Render answer choices on Host screen
+      const grid = document.getElementById('host-choices-grid');
+      grid.innerHTML = '';
       q.choices.forEach((choice, i) => {
-        const card = document.createElement("div");
-        card.className = "answer-card";
-        card.id = `host-ans-${i}`;
-        card.innerHTML = `<span class="answer-letter">${letters[i]}</span><span>${choice}</span>`;
-        box.appendChild(card);
+        const div = document.createElement('div');
+        div.className = 'answer-btn';
+        div.id = 'host-choice-' + i;
+        div.innerHTML = `<span class="badge-icon">${['A','B','C','D'][i]}</span> <span>${choice}</span>`;
+        grid.appendChild(div);
       });
 
-      hostBroadcast({
-        type: "NEW_QUESTION",
-        questionIndex: idx,
-        question: q.question,
+      // Broadcast question to all connected players
+      broadcast({
+        type: 'NEW_QUESTION',
+        questionNumber: index + 1,
+        totalQuestions: QUESTIONS.length,
+        questionText: q.question,
         choices: q.choices,
-        seconds: q.seconds,
-        points: q.points,
-        total: QUESTIONS.length
+        seconds: timeLeft
       });
 
-      startHostTimer(q.seconds);
-    }
+      // Start Countdown
+      clearInterval(questionTimerInterval);
+      questionTimerInterval = setInterval(() => {
+        timeLeft--;
+        document.getElementById('host-timer').innerText = timeLeft + 's';
 
-    function startHostTimer(duration) {
-      clearInterval(questionTimer);
-      secondsLeft = duration;
-      questionStartTime = Date.now();
+        // Synchronize timer pulse
+        broadcast({ type: 'TIMER_PULSE', secondsLeft: timeLeft });
 
-      const text = document.getElementById("host-timer-text");
-      const bar = document.getElementById("host-timer-bar");
-      text.innerText = secondsLeft;
-      bar.style.width = "100%";
-
-      questionTimer = setInterval(() => {
-        secondsLeft--;
-        text.innerText = secondsLeft;
-        bar.style.width = `${Math.max(0, (secondsLeft / duration) * 100)}%`;
-
-        if (secondsLeft <= 0) {
-          clearInterval(questionTimer);
-          hostRevealAnswer();
+        if (timeLeft <= 0) {
+          clearInterval(questionTimerInterval);
+          revealAnswer();
         }
       }, 1000);
     }
 
-    function hostRevealAnswer() {
-      clearInterval(questionTimer);
+    function recordPlayerAnswer(playerId, choiceIndex, timeRemaining) {
+      // Prevent duplicate answers from the same player
+      if (currentAnswers[playerId] !== undefined) return;
+
+      currentAnswers[playerId] = {
+        choiceIndex: choiceIndex,
+        timeRemaining: Math.max(0, timeRemaining)
+      };
+
+      updateResponseBanner();
+
+      // If all connected players have answered, auto-reveal to maintain high game energy
+      const totalPlayers = Object.keys(players).length;
+      if (Object.keys(currentAnswers).length >= totalPlayers && totalPlayers > 0) {
+        clearInterval(questionTimerInterval);
+        setTimeout(revealAnswer, 600);
+      }
+    }
+
+    function updateResponseBanner() {
+      const received = Object.keys(currentAnswers).length;
+      const total = Object.keys(players).length;
+      document.getElementById('host-responses-received').innerText = received;
+      document.getElementById('host-responses-total').innerText = total;
+    }
+
+    function revealAnswer() {
+      clearInterval(questionTimerInterval);
       const q = QUESTIONS[currentQuestionIndex];
 
+      // Highlight correct/incorrect on host screen
       q.choices.forEach((_, i) => {
-        const card = document.getElementById(`host-ans-${i}`);
-        if (card) {
-          if (i === q.correctAnswer) {
-            card.classList.add("correct");
-            card.innerHTML += ` <span style="margin-left:auto; font-size:1.2rem;">✓ Correct</span>`;
-          } else {
-            card.classList.add("incorrect");
-          }
+        const btn = document.getElementById('host-choice-' + i);
+        if (i === q.correctAnswer) {
+          btn.classList.add('correct-highlight');
+          btn.innerHTML = `<span class="badge-icon">✓</span> <span>${q.choices[i]}</span>`;
+        } else {
+          btn.classList.add('wrong-highlight');
+          btn.innerHTML = `<span class="badge-icon">✕</span> <span>${q.choices[i]}</span>`;
         }
       });
 
-      document.getElementById("host-explanation-text").innerText = q.explanation;
-      document.getElementById("host-source-text").innerText = `Reference: ${q.source}`;
-      document.getElementById("host-feedback-box").style.display = "block";
-      document.getElementById("btn-reveal-answer").style.display = "none";
-      document.getElementById("host-question-controls").style.display = "flex";
+      // Reveal explanation
+      document.getElementById('host-explanation-text').innerText = q.explanation;
+      document.getElementById('host-source-text').innerText = 'Source: ' + q.source;
+      document.getElementById('host-explanation-box').classList.remove('hidden');
 
-      // Send answer, base points, and allotted seconds so players see exact scores
-      hostBroadcast({
-        type: "REVEAL_ANSWER",
-        correctAnswer: q.correctAnswer,
-        points: q.points,
-        seconds: q.seconds,
-        explanation: q.explanation
+      // Calculate scores for all players
+      Object.keys(players).forEach(playerId => {
+        const ans = currentAnswers[playerId];
+        let earned = 0;
+        let isCorrect = false;
+
+        if (ans && ans.choiceIndex === q.correctAnswer) {
+          isCorrect = true;
+          // Scoring formula: 1000 base + speed bonus (up to 500)
+          const speedFraction = ans.timeRemaining / (q.seconds || 20);
+          const speedBonus = Math.round(500 * Math.max(0, Math.min(1, speedFraction)));
+          earned = 1000 + speedBonus;
+
+          players[playerId].score += earned;
+          players[playerId].correctCount += 1;
+          players[playerId].totalTime += (q.seconds - ans.timeRemaining);
+        }
+
+        // Notify each player privately of their results
+        const conn = hostConnections[playerId];
+        if (conn && conn.open) {
+          conn.send({
+            type: 'ROUND_RESULT',
+            isCorrect: isCorrect,
+            pointsEarned: earned,
+            totalScore: players[playerId].score,
+            correctAnswer: q.correctAnswer
+          });
+        }
       });
 
+      document.getElementById('btn-reveal').classList.add('hidden');
+
+      // CRITICAL: Final Question Auto-Transition Requirement
       if (currentQuestionIndex === QUESTIONS.length - 1) {
-        setTimeout(hostDisplayFinal, 3200);
-      }
-    }
-
-    function hostNextQuestion() {
-      showHostScreen("host-screen-leaderboard");
-      renderLeaderboard("host-leaderboard-body");
-    }
-
-    function hostResumeNextQuestion() {
-      currentQuestionIndex++;
-      if (currentQuestionIndex < QUESTIONS.length) {
-        loadHostQuestion(currentQuestionIndex);
+        setTimeout(showFinalLeaderboard, 3000);
       } else {
-        hostDisplayFinal();
+        document.getElementById('btn-next-question').classList.remove('hidden');
       }
     }
 
-    function renderLeaderboard(tbodyId) {
-      const tbody = document.getElementById(tbodyId);
-      tbody.innerHTML = "";
-      const sorted = Array.from(connectedPlayers.values()).sort((a,b) => b.score - a.score);
-      if (sorted.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:var(--text-dim);">No players scored yet.</td></tr>`;
-        return;
+    function nextQuestion() {
+      // After every 3 questions or before final, show intermediate leaderboard
+      if ((currentQuestionIndex + 1) % 3 === 0) {
+        showInterimLeaderboard();
+      } else {
+        currentQuestionIndex++;
+        loadQuestion(currentQuestionIndex);
       }
-      sorted.forEach((p, i) => {
-        const row = document.createElement("tr");
-        if (i === 0) row.className = "podium-1";
-        else if (i === 1) row.className = "podium-2";
-        else if (i === 2) row.className = "podium-3";
-        const medals = ["🥇", "🥈", "🥉"];
-        row.innerHTML = `<td class="rank-cell">${i < 3 ? medals[i] : i + 1}</td><td>${p.name}</td><td class="score-cell">${p.score.toLocaleString()} pts</td>`;
-        tbody.appendChild(row);
+    }
+
+    function getSortedRankings() {
+      return Object.values(players).sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score;
+        if (b.correctCount !== a.correctCount) return b.correctCount - a.correctCount;
+        return a.totalTime - b.totalTime;
       });
     }
 
-    function hostDisplayFinal() {
-      showHostScreen("host-screen-final");
-      renderLeaderboard("host-final-leaderboard-body");
-      const sorted = Array.from(connectedPlayers.values()).sort((a,b) => b.score - a.score);
+    function showInterimLeaderboard() {
+      showScreen('host-leaderboard');
+      const table = document.getElementById('interim-leaderboard-table');
+      table.innerHTML = '<tr><th>Rank</th><th>Player</th><th>Score</th></tr>';
+
+      const sorted = getSortedRankings();
+      sorted.forEach((p, idx) => {
+        const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `#${idx + 1}`;
+        const row = document.createElement('tr');
+        row.innerHTML = `<td class="rank-cell">${medal}</td><td>${p.name}</td><td><strong>${p.score.toLocaleString()}</strong> pts</td>`;
+        table.appendChild(row);
+      });
+    }
+
+    function advanceFromLeaderboard() {
+      currentQuestionIndex++;
+      loadQuestion(currentQuestionIndex);
+    }
+
+    function showFinalLeaderboard() {
+      showScreen('host-final');
+      const table = document.getElementById('final-leaderboard-table');
+      table.innerHTML = '<tr><th>Rank</th><th>Player</th><th>Score</th><th>Correct Answers</th></tr>';
+
+      const sorted = getSortedRankings();
       if (sorted.length > 0) {
-        document.getElementById("champion-name").innerText = sorted[0].name;
-        document.getElementById("champion-score").innerText = `${sorted[0].score.toLocaleString()} points`;
+        document.getElementById('champion-name').innerText = sorted[0].name + ` (${sorted[0].score.toLocaleString()} pts)`;
       }
-      if (typeof confetti !== "undefined") {
-        try { confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } }); } catch(e) {}
-      }
-      hostBroadcast({ type: "GAME_OVER" });
-    }
 
-    function hostResetGame() {
-      connectedPlayers.forEach(p => p.score = 0);
-      currentQuestionIndex = 0;
-      loadHostQuestion(0);
-    }
-
-    function showHostScreen(id) {
-      document.querySelectorAll("#host-view .screen").forEach(s => s.classList.remove("active"));
-      const target = document.getElementById(id);
-      if (target) target.classList.add("active");
-    }
-
-    function hostBroadcast(msg) {
-      if (localBroadcast) {
-        try { localBroadcast.postMessage(msg); } catch(e) {}
-      }
-      connectedPlayers.forEach(p => {
-        if (p.conn && p.conn.open) {
-          try { p.conn.send(msg); } catch(e) {}
-        }
+      sorted.forEach((p, idx) => {
+        const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `#${idx + 1}`;
+        const row = document.createElement('tr');
+        row.innerHTML = `<td class="rank-cell">${medal}</td><td><strong>${p.name}</strong></td><td>${p.score.toLocaleString()} pts</td><td>${p.correctCount} / ${QUESTIONS.length}</td>`;
+        table.appendChild(row);
       });
+
+      // Launch Confetti
+      confetti({
+        particleCount: 120,
+        spread: 70,
+        origin: { y: 0.6 }
+      });
+
+      broadcast({ type: 'GAME_OVER' });
+    }
+
+    function restartSameGame() {
+      Object.keys(players).forEach(id => {
+        players[id].score = 0;
+        players[id].correctCount = 0;
+        players[id].totalTime = 0;
+      });
+      startGame();
     }
 
     /* ==========================================================================
-       LEARNER / PLAYER LOGIC & POINT FEEDBACK
+       PLAYER / LEARNER ENGINE
        ========================================================================== */
-    function playerJoinGame() {
-      const r = document.getElementById("player-input-room").value.trim().toUpperCase();
-      const n = document.getElementById("player-input-name").value.trim();
-      const errBox = document.getElementById("player-join-error");
-
-      if (!r || r.length < 4) {
-        errBox.innerText = "Please enter a valid Room Code.";
-        errBox.style.display = "block";
-        return;
-      }
-      if (!n) {
-        errBox.innerText = "Please enter your name or nickname.";
-        errBox.style.display = "block";
-        return;
-      }
-
-      errBox.style.display = "none";
-      playerClient.name = n;
-      playerClient.score = 0;
-      playerClient.peerId = "PL_" + Math.random().toString(36).substring(2, 8);
-      document.getElementById("player-display-name").innerText = n;
-
-      try {
-        if (typeof BroadcastChannel !== "undefined") {
-          localBroadcast = new BroadcastChannel(APP_PREFIX + r);
-          localBroadcast.onmessage = (e) => handlePlayerIncoming(e.data);
-          localBroadcast.postMessage({ type: "PLAYER_JOIN", playerId: playerClient.peerId, name: n });
-        }
-      } catch (e) {}
-
-      try {
-        if (typeof Peer !== "undefined") {
-          peer = new Peer({ debug: 0 });
-          peer.on("open", () => {
-            const conn = peer.connect(APP_PREFIX + r);
-            playerClient.conn = conn;
-            conn.on("open", () => {
-              conn.send({ type: "PLAYER_JOIN", playerId: playerClient.peerId, name: n });
-            });
-            conn.on("data", (d) => handlePlayerIncoming(d));
-          });
-        }
-      } catch (e) {}
-
-      showPlayerScreen("player-screen-waiting");
+    function showPlayerJoin() {
+      myRole = 'player';
+      showScreen('player-join');
     }
 
-    function handlePlayerIncoming(data) {
-      if (!data || !data.type) return;
+    function joinGameAsPlayer() {
+      const roomInput = document.getElementById('player-room-input').value.trim().toUpperCase();
+      const nameInput = document.getElementById('player-name-input').value.trim();
 
-      if (data.type === "NEW_QUESTION") {
-        playerClient.hasAnswered = false;
-        playerClient.selectedChoice = null;
-        playerClient.questionStartTime = Date.now();
-        playerClient.answerTimeSec = 0;
+      if (!roomInput || !nameInput) {
+        alert('Please provide both the 4-digit Room Code and your Name.');
+        return;
+      }
 
-        showPlayerScreen("player-screen-question");
-        document.getElementById("player-q-number").innerText = `Q${data.questionIndex + 1} of ${data.total}`;
-        document.getElementById("player-q-text").innerText = data.question;
-        document.getElementById("player-answers-box").style.display = "flex";
-        document.getElementById("player-lock-notice").style.display = "none";
-        document.getElementById("player-current-score").innerText = playerClient.score.toLocaleString();
+      myRoomCode = roomInput;
+      myPlayerName = nameInput;
 
-        const box = document.getElementById("player-answers-box");
-        box.innerHTML = "";
-        data.choices.forEach((c, i) => {
-          const btn = document.createElement("button");
-          btn.className = "btn btn-secondary mobile-btn";
-          btn.innerText = c;
-          btn.onclick = () => {
-            if (playerClient.hasAnswered) return;
-            playerClient.hasAnswered = true;
-            playerClient.selectedChoice = i;
-            playerClient.answerTimeSec = Math.max(0.1, (Date.now() - playerClient.questionStartTime) / 1000);
+      peer = new Peer();
 
-            document.getElementById("player-answers-box").style.display = "none";
-            document.getElementById("player-lock-notice").style.display = "block";
+      peer.on('open', id => {
+        const targetHostPeerId = 'cotality-flash-' + myRoomCode;
+        playerHostConn = peer.connect(targetHostPeerId, { reliable: true });
 
-            const payload = { type: "SUBMIT_ANSWER", playerId: playerClient.peerId, choiceIndex: i };
-            if (localBroadcast) localBroadcast.postMessage(payload);
-            if (playerClient.conn && playerClient.conn.open) playerClient.conn.send(payload);
-          };
-          box.appendChild(btn);
+        playerHostConn.on('open', () => {
+          playerHostConn.send({
+            type: 'PLAYER_JOIN',
+            playerId: myPlayerId,
+            name: myPlayerName
+          });
         });
 
-        // Start countdown animation on mobile bar
-        const bar = document.getElementById("player-timer-bar");
-        bar.style.transition = "none";
-        bar.style.width = "100%";
-        setTimeout(() => {
-          bar.style.transition = `width ${data.seconds}s linear`;
-          bar.style.width = "0%";
-        }, 50);
-      }
+        playerHostConn.on('data', data => handlePlayerDataReceived(data));
 
-      if (data.type === "REVEAL_ANSWER") {
-        showPlayerScreen("player-screen-result");
+        playerHostConn.on('error', err => {
+          alert('Could not establish connection to Room ' + myRoomCode + '. Ensure host screen is running.');
+        });
+      });
+    }
 
-        const isCorrect = (playerClient.selectedChoice === data.correctAnswer);
-        let earned = 0;
-        let basePts = data.points || 1000;
-        let speedBonus = 0;
+    function handlePlayerDataReceived(data) {
+      if (!data || !data.type) return;
 
-        const iconElem = document.getElementById("player-result-icon");
-        const headingElem = document.getElementById("player-result-heading");
-        const badgeElem = document.getElementById("player-earned-badge");
-        const breakdownElem = document.getElementById("player-breakdown-text");
+      switch(data.type) {
+        case 'JOIN_ACCEPTED':
+          showScreen('player-waiting');
+          document.getElementById('player-welcome-name').innerText = `Welcome, ${data.name}!`;
+          document.getElementById('player-connected-room').innerText = data.roomCode;
+          break;
 
-        if (isCorrect) {
-          // Calculate speed bonus: up to 500 points for responding quickly
-          const duration = data.seconds || 20;
-          const ratio = Math.max(0, 1 - (playerClient.answerTimeSec / duration));
-          speedBonus = Math.round(ratio * 500);
-          earned = basePts + speedBonus;
-          playerClient.score += earned;
+        case 'NEW_QUESTION':
+          setupPlayerQuestion(data);
+          break;
 
-          iconElem.innerText = "✓";
-          iconElem.style.color = "var(--color-correct)";
-          headingElem.innerText = "Correct!";
-          badgeElem.className = "result-badge correct";
-          badgeElem.innerText = `+${earned.toLocaleString()} pts`;
-          breakdownElem.innerText = `${basePts.toLocaleString()} Base Points + ${speedBonus} Speed Bonus`;
-        } else {
-          iconElem.innerText = "✕";
-          iconElem.style.color = "var(--color-incorrect)";
-          headingElem.innerText = playerClient.hasAnswered ? "Incorrect" : "Time's Up!";
-          badgeElem.className = "result-badge incorrect";
-          badgeElem.innerText = "+0 pts";
-          breakdownElem.innerText = playerClient.hasAnswered ? "Better luck on the next question!" : "No answer was recorded.";
-        }
+        case 'TIMER_PULSE':
+          document.getElementById('player-timer').innerText = data.secondsLeft + 's';
+          break;
 
-        document.getElementById("player-total-score-display").innerText = `${playerClient.score.toLocaleString()} pts`;
-        document.getElementById("player-current-score").innerText = playerClient.score.toLocaleString();
-      }
+        case 'ROUND_RESULT':
+          setupPlayerResult(data);
+          break;
 
-      if (data.type === "GAME_OVER") {
-        showPlayerScreen("player-screen-result");
+        case 'GAME_OVER':
+          showScreen('player-waiting');
+          document.getElementById('player-welcome-name').innerText = "Challenge Complete! 🏆";
+          document.getElementById('player-connected-room').innerText = "See Host Podium";
+          break;
       }
     }
 
-    function showPlayerScreen(id) {
-      document.querySelectorAll("#player-view .screen").forEach(s => s.classList.remove("active"));
-      const target = document.getElementById(id);
-      if (target) target.classList.add("active");
+    function setupPlayerQuestion(qData) {
+      showScreen('player-question');
+      document.getElementById('player-q-number').innerText = `Question ${qData.questionNumber} of ${qData.totalQuestions}`;
+      document.getElementById('player-q-text').innerText = qData.questionText;
+      document.getElementById('player-timer').innerText = qData.seconds + 's';
+      document.getElementById('player-score-display').innerText = myCurrentScore.toLocaleString() + ' pts';
+      document.getElementById('player-locked-banner').classList.add('hidden');
+
+      const container = document.getElementById('player-answers-container');
+      container.innerHTML = '';
+
+      qData.choices.forEach((choiceText, index) => {
+        const btn = document.createElement('button');
+        btn.className = 'answer-btn';
+        btn.innerHTML = `<span class="badge-icon">${['A','B','C','D'][index]}</span> <span>${choiceText}</span>`;
+        
+        btn.onclick = () => {
+          // LOCK ONLY THIS SPECIFIC PLAYER'S SUBMISSION
+          submitPlayerAnswer(index, btn, container);
+        };
+        container.appendChild(btn);
+      });
+    }
+
+    function submitPlayerAnswer(selectedIndex, clickedBtn, container) {
+      // Disable all buttons on this player's mobile viewport
+      const buttons = container.querySelectorAll('.answer-btn');
+      buttons.forEach(b => {
+        b.disabled = true;
+        b.style.pointerEvents = 'none';
+      });
+
+      clickedBtn.classList.add('selected');
+      document.getElementById('player-locked-banner').classList.remove('hidden');
+
+      // Calculate remaining seconds
+      const timerStr = document.getElementById('player-timer').innerText.replace('s', '');
+      const timeRemaining = parseInt(timerStr, 10) || 0;
+
+      // Transmit answer up to host
+      if (playerHostConn && playerHostConn.open) {
+        playerHostConn.send({
+          type: 'SUBMIT_ANSWER',
+          playerId: myPlayerId,
+          choiceIndex: selectedIndex,
+          timeRemaining: timeRemaining
+        });
+      }
+    }
+
+    function setupPlayerResult(result) {
+      showScreen('player-reveal');
+      myCurrentScore = result.totalScore;
+
+      const title = document.getElementById('player-result-title');
+      const points = document.getElementById('player-result-points');
+
+      if (result.isCorrect) {
+        title.innerHTML = '🎉 <span style="color: var(--correct)">Correct!</span>';
+        points.innerText = `+${result.pointsEarned.toLocaleString()} Points`;
+      } else {
+        title.innerHTML = '❌ <span style="color: var(--incorrect)">Incorrect</span>';
+        points.innerText = '+0 Points';
+      }
     }
   </script>
 </body>
